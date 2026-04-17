@@ -1,0 +1,29 @@
+{
+  "target_rules": [
+    "Use MySQL-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit PostgreSQL-only casts, dollar quoting, or language clauses."
+  ],
+  "unsupported_object_types": {
+    "sequence": "MySQL does not support PostgreSQL-style standalone sequence migration directly in this tool.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for MySQL in this tool.",
+    "synonym": "MySQL does not support synonym objects."
+  },
+  "object_rules": {
+    "table": [
+      "Convert PostgreSQL table syntax to valid MySQL DDL with compatible data types and defaults."
+    ],
+    "view": [
+      "Convert PostgreSQL view syntax to valid MySQL view syntax."
+    ],
+    "storedprocedure": [
+      "Convert PostgreSQL procedure syntax to one valid MySQL CREATE PROCEDURE statement without DELIMITER directives."
+    ],
+    "function": [
+      "Convert PostgreSQL function syntax to one valid MySQL CREATE FUNCTION statement."
+    ],
+    "trigger": [
+      "Convert PostgreSQL trigger semantics to valid MySQL CREATE TRIGGER syntax when possible."
+    ]
+  }
+}

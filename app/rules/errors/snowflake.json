@@ -1,0 +1,14 @@
+{
+  "rules": [
+    {
+      "contains": ["invalid identifier"],
+      "object_type": "table",
+      "hint": "Compare source and target column names using normalized matching and preserve the source business columns required for data copy."
+    },
+    {
+      "contains": ["does not exist or not authorized"],
+      "object_type": "table",
+      "hint": "Ensure the repaired SQL creates the exact target table in the active Snowflake database and schema, not a placeholder object name."
+    }
+  ]
+}

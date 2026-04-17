@@ -1,0 +1,29 @@
+{
+  "target_rules": [
+    "Use Snowflake-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit PostgreSQL-only casts, dollar quoting, or language clauses unless Snowflake explicitly supports an equivalent."
+  ],
+  "unsupported_object_types": {
+    "trigger": "Snowflake does not support PostgreSQL-style table triggers directly. Convert them manually to a Snowflake stream/task/procedure pattern.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for Snowflake in this tool.",
+    "synonym": "Snowflake synonym migration is not supported by this tool for PostgreSQL sources."
+  },
+  "object_rules": {
+    "table": [
+      "Convert PostgreSQL table syntax to valid Snowflake DDL with compatible data types and defaults."
+    ],
+    "view": [
+      "Convert PostgreSQL view syntax to valid Snowflake view syntax."
+    ],
+    "storedprocedure": [
+      "Convert PostgreSQL procedure syntax to valid Snowflake procedure syntax."
+    ],
+    "function": [
+      "Convert PostgreSQL function syntax to valid Snowflake function syntax."
+    ],
+    "sequence": [
+      "Convert PostgreSQL sequences to valid Snowflake CREATE SEQUENCE syntax when present."
+    ]
+  }
+}

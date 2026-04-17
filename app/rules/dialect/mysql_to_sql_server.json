@@ -1,0 +1,26 @@
+{
+  "target_rules": [
+    "Use SQL Server-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Prefer explicit CREATE statements with valid SQL Server syntax."
+  ],
+  "unsupported_object_types": {
+    "event": "SQL Server does not support MySQL EVENT objects directly. Convert them manually to SQL Server Agent jobs or orchestration.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for SQL Server in this tool."
+  },
+  "object_rules": {
+    "table": [
+      "Preserve source business column names and primary key intent when possible.",
+      "Use valid SQL Server identifier quoting and data types."
+    ],
+    "trigger": [
+      "Convert MySQL trigger syntax to a SQL Server CREATE TRIGGER statement. Do not convert a trigger into a procedure."
+    ],
+    "storedprocedure": [
+      "Convert MySQL procedure syntax to valid SQL Server CREATE PROCEDURE syntax."
+    ],
+    "function": [
+      "Convert MySQL function syntax to valid SQL Server CREATE FUNCTION syntax."
+    ]
+  }
+}

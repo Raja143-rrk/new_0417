@@ -1,0 +1,11 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.page-header-title {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}

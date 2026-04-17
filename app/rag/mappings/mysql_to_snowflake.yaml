@@ -1,0 +1,369 @@
+# RAG knowledge mapping
+# Use this file only for AI context and examples.
+# Do not add regex pattern/replacement rules here.
+#
+# Preferred section order:
+# metadata
+# datatypes
+# functions
+# numeric_functions
+# date_functions
+# query
+# joins
+# operators
+# transactions
+# procedural
+# procedures
+# views
+# known_issues
+# examples
+
+metadata:
+  source: "mysql"
+  target: "snowflake"
+  version: "1.0"
+
+datatypes:
+  - source: "INT"
+    target: "INTEGER"
+
+  - source: "BIGINT"
+    target: "BIGINT"
+
+  - source: "SMALLINT"
+    target: "SMALLINT"
+
+  - source: "TINYINT(1)"
+    target: "BOOLEAN"
+
+  - source: "VARCHAR({n})"
+    target: "VARCHAR({n})"
+
+  - source: "CHAR({n})"
+    target: "CHAR({n})"
+
+  - source: "TEXT"
+    target: "STRING"
+
+  - source: "DATETIME"
+    target: "TIMESTAMP"
+
+  - source: "DATE"
+    target: "DATE"
+
+  - source: "DECIMAL({p},{s})"
+    target: "DECIMAL({p},{s})"
+
+  - source: "DOUBLE"
+    target: "FLOAT"
+
+  - source: "DECIMAL(38,0)"
+    target: "NUMBER(38,0)"
+
+  - source: "DECIMAL(12,2)"
+    target: "NUMBER(12,2)"
+
+  - source: "TIMESTAMP"
+    target: "TIMESTAMP_NTZ"
+
+functions:
+  - source: "NOW()"
+    target: "CURRENT_TIMESTAMP()"
+
+  - source: "CURDATE()"
+    target: "CURRENT_DATE()"
+
+  - source: "IFNULL({a},{b})"
+    target: "COALESCE({a},{b})"
+
+  - source: "SUBSTRING({col},{start},{len})"
+    target: "SUBSTR({col},{start},{len})"
+
+  - source: "CONCAT({a},{b})"
+    target: "{a} || {b}"
+
+  - source: "CURRENT_TIMESTAMP()"
+    target: "CURRENT_TIMESTAMP()"
+
+  - source: "CURRENT_DATE"
+    target: "CURRENT_DATE()"
+
+  - source: "VALUES({col})"
+    target: "{col}"
+
+numeric_functions:
+  - source: "ABS({col})"
+    target: "ABS({col})"
+
+  - source: "CEIL({col})"
+    target: "CEILING({col})"
+
+date_functions:
+  - source: "DATEDIFF({d1},{d2})"
+    target: "DATEDIFF('day',{d1},{d2})"
+
+  - source: "DATE_ADD({date}, INTERVAL {n} DAY)"
+    target: "DATEADD(day, {n}, {date})"
+
+query:
+  - source: "LIMIT {n}"
+    target: "FETCH FIRST {n} ROWS ONLY"
+
+  - source: "`{col}`"
+    target: "\"{col}\""
+
+  - source: "AUTO_INCREMENT"
+    target: "SEQUENCE"
+
+  - source: "ON DUPLICATE KEY UPDATE"
+    target: "MERGE INTO"
+
+joins:
+  - source: "INNER JOIN"
+    target: "INNER JOIN"
+
+  - source: "LEFT JOIN"
+    target: "LEFT JOIN"
+
+operators:
+  - source: "!="
+    target: "<>"
+
+transactions:
+  - source: "START TRANSACTION"
+    target: "BEGIN"
+
+  - source: "COMMIT"
+    target: "COMMIT"
+
+  - source: "ROLLBACK"
+    target: "ROLLBACK"
+
+procedural:
+  - source: "DECLARE {var} CURSOR FOR {query}"
+    target: "Snowflake uses RESULTSET instead of CURSOR"
+
+  - source: "OPEN {cursor}"
+    target: "-- handled automatically"
+
+  - source: "FETCH {cursor} INTO {var}"
+    target: "-- use FOR loop in Snowflake"
+
+  - source: "LOOP"
+    target: "FOR loop"
+
+  - source: "LEAVE {label}"
+    target: "BREAK"
+
+procedures:
+  - name: "mysql_procedure"
+    source: |
+      CREATE PROCEDURE proc()
+      BEGIN
+      ...
+      END;
+    target: |
+      CREATE OR REPLACE PROCEDURE proc()
+      RETURNS STRING
+      LANGUAGE SQL
+      AS
+      $$
+      BEGIN
+      ...
+      RETURN 'SUCCESS';
+      END;
+      $$;
+
+views:
+  - source: "DEFINER=`{user}`@`{host}`"
+    target: ""
+
+  - source: "ALGORITHM=UNDEFINED"
+    target: ""
+
+  - source: "SQL SECURITY DEFINER"
+    target: ""
+
+known_issues:
+  - issue: "LIMIT not supported"
+    fix: "Use FETCH FIRST"
+
+  - issue: "Backticks not supported"
+    fix: "Use double quotes"
+
+  - issue: "ON DUPLICATE KEY UPDATE not supported"
+    fix: "Rewrite using MERGE statement"
+
+  - issue: "CURSOR not directly supported"
+    fix: "Rewrite using FOR loop"
+
+  - issue: "VALUES() not supported"
+    fix: "Use direct column reference"
+
+  - issue: "DEFINER and DELIMITER not supported"
+    fix: "Remove these statements"
+
+  - issue: "AUTO_INCREMENT not supported"
+    fix: "Use SEQUENCE"
+
+  - issue: "MySQL procedure missing DELIMITER"
+    fix: "Wrap with DELIMITER $$ ... END $$ DELIMITER ;"
+
+  - issue: "Snowflake procedure incompatible"
+    fix: "Rewrite using MySQL BEGIN...END syntax"
+examples:
+  - input: "SELECT * FROM users LIMIT 5"
+    output: "SELECT * FROM users FETCH FIRST 5 ROWS ONLY"
+
+  - input: "SELECT CONCAT(FIRST_NAME, ' ', LAST_NAME) FROM member_details"
+    output: "SELECT FIRST_NAME || ' ' || LAST_NAME FROM member_details"
+
+  - input: |
+      SELECT
+        CASE
+          WHEN coverage_start = coverage_end THEN 'CANCELLED'
+          WHEN coverage_end < CURRENT_DATE THEN 'TERMINATED'
+          ELSE 'ACTIVE'
+        END AS status
+      FROM coverage_info
+    output: |
+      SELECT
+        CASE
+          WHEN coverage_start = coverage_end THEN 'CANCELLED'
+          WHEN coverage_end < CURRENT_DATE() THEN 'TERMINATED'
+          ELSE 'ACTIVE'
+        END AS status
+      FROM coverage_info
+
+  - input: |
+      SELECT m.member_id, c.coverage_id
+      FROM member_details m
+      JOIN coverage_info c ON m.member_id = c.member_id
+    output: |
+      SELECT m.member_id, c.coverage_id
+      FROM member_details m
+      INNER JOIN coverage_info c ON m.member_id = c.member_id
+
+  - input: |
+      SELECT c.customer_id, o.order_id
+      FROM customers c
+      LEFT JOIN orders o
+      ON c.customer_id = o.customer_id
+      AND o.order_date BETWEEN '2023-01-01' AND '2023-12-31'
+    output: |
+      SELECT c.customer_id, o.order_id
+      FROM customers c
+      LEFT JOIN orders o
+      ON c.customer_id = o.customer_id
+      AND o.order_date BETWEEN '2023-01-01' AND '2023-12-31'
+
+  - input: |
+      SELECT customer_id, COUNT(order_id), SUM(order_amount)
+      FROM orders
+      GROUP BY customer_id
+    output: |
+      SELECT customer_id, COUNT(order_id), SUM(order_amount)
+      FROM orders
+      GROUP BY customer_id
+
+  - input: |
+      SELECT COALESCE(SUM(order_amount), 0)
+      FROM orders
+    output: |
+      SELECT COALESCE(SUM(order_amount), 0)
+      FROM orders
+
+  - input: |
+      CREATE TABLE customers (
+        CUSTOMER_ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+        NAME VARCHAR(100)
+      )
+    output: |
+      CREATE TABLE customers (
+        CUSTOMER_ID BIGINT AUTOINCREMENT,
+        NAME VARCHAR(100)
+      )
+
+  - input: |
+      INSERT INTO customer_summary (customer_id, total_orders)
+      VALUES (1, 5)
+      ON DUPLICATE KEY UPDATE total_orders = VALUES(total_orders)
+    output: |
+      MERGE INTO customer_summary t
+      USING (SELECT 1 AS customer_id, 5 AS total_orders) s
+      ON t.customer_id = s.customer_id
+      WHEN MATCHED THEN
+        UPDATE SET total_orders = s.total_orders
+      WHEN NOT MATCHED THEN
+        INSERT (customer_id, total_orders)
+        VALUES (s.customer_id, s.total_orders)
+
+  - input: |
+      CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost`
+      SQL SECURITY DEFINER VIEW users_above_30 AS
+      SELECT * FROM users WHERE age > 30
+    output: |
+      CREATE OR REPLACE VIEW users_above_30 AS
+      SELECT * FROM users WHERE age > 30
+
+  - input: "SELECT CURRENT_DATE"
+    output: "SELECT CURRENT_DATE()"
+
+  - input: "SELECT CURRENT_TIMESTAMP()"
+    output: "SELECT CURRENT_TIMESTAMP()"
+
+  - input: |
+      CREATE FUNCTION GET_FULL_NAME(FNAME VARCHAR(50), LNAME VARCHAR(50))
+      RETURNS VARCHAR(255)
+      RETURN CONCAT(FNAME, ' ', LNAME)
+    output: |
+      CREATE OR REPLACE FUNCTION GET_FULL_NAME(FNAME STRING, LNAME STRING)
+      RETURNS STRING
+      AS
+      $$
+      FNAME || ' ' || LNAME
+      $$
+
+  - input: |
+      START TRANSACTION;
+      INSERT INTO customers VALUES (1, 'Test');
+      COMMIT;
+    output: |
+      BEGIN;
+      INSERT INTO customers VALUES (1, 'Test');
+      COMMIT;
+
+  - input: |
+      DECLARE cur CURSOR FOR SELECT customer_id FROM customers;
+      OPEN cur;
+      FETCH cur INTO v_id;
+    output: |
+      -- Snowflake uses FOR loop instead of CURSOR
+      FOR rec IN (SELECT customer_id FROM customers) DO
+        LET v_id := rec.customer_id;
+      END FOR;
+
+  - input: |
+      SELECT c.customer_id, COUNT(o.order_id)
+      FROM customers c
+      LEFT JOIN orders o ON c.customer_id = o.customer_id
+      GROUP BY c.customer_id
+    output: |
+      SELECT c.customer_id, COUNT(o.order_id)
+      FROM customers c
+      LEFT JOIN orders o ON c.customer_id = o.customer_id
+      GROUP BY c.customer_id
+
+  - input: |
+      INSERT INTO table
+      VALUES (...)
+      ON DUPLICATE KEY UPDATE col = VALUES(col)
+    output: |
+      MERGE INTO table t
+      USING source s
+      ON t.id = s.id
+      WHEN MATCHED THEN UPDATE SET col = s.col
+      WHEN NOT MATCHED THEN INSERT (...)
+
+  - input: "SELECT CONCAT(FNAME, ' ', LNAME)"
+    output: "SELECT FNAME || ' ' || LNAME"

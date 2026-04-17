@@ -1,0 +1,373 @@
+.advanced-page {
+  --bg: #f7f8fa;
+  --bg2: #eff2f7;
+  --surface: #ffffff;
+  --surface2: #fafbfc;
+  --border: #e2e8f0;
+  --border-light: #eef2f7;
+  --primary: #0052cc;
+  --primary-light: #0066ff;
+  --primary-alpha: rgba(0, 82, 204, 0.1);
+  --text-primary: #0d1117;
+  --text-secondary: #424242;
+  --text-tertiary: #666666;
+  --text-muted: #6b7280;
+  --warning: #d97706;
+  --font-ui: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 14px 36px rgba(15, 23, 42, 0.08);
+  min-height: 100vh;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(circle at 16% 18%, rgba(31, 115, 201, 0.08), transparent 22%),
+    radial-gradient(circle at 84% 72%, rgba(243, 116, 51, 0.08), transparent 18%),
+    linear-gradient(180deg, #fbfcfe, #f5f7fb);
+}
+
+.advanced-page * {
+  box-sizing: border-box;
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 30px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.brand,
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--primary-alpha);
+  color: var(--primary);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.brand-icon:hover {
+  transform: scale(1.05);
+  background: var(--primary);
+  color: #fff;
+}
+
+.brand-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.brand-name .db-text {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.brand-name .migrator-text {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.nav-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 120px 24px 56px;
+}
+
+.hero,
+.card,
+.note {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-lg);
+}
+
+.hero {
+  position: relative;
+  margin-bottom: 24px;
+  padding: 30px 32px;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -28% auto;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(31, 115, 201, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.hero-kicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #d6e7f8;
+  background: #f1f7fd;
+  color: var(--primary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero-kicker-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #f7faff);
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.hero h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 720px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+
+.hero h1 span {
+  color: var(--primary);
+}
+
+.hero p {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 14px 0 0;
+  color: var(--text-tertiary);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.hero-meta {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+  max-width: 860px;
+}
+
+.hero-meta-card {
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: var(--surface2);
+}
+
+.hero-meta-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-meta-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.card {
+  padding: 22px;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.card h3,
+.note h3 {
+  margin: 0;
+  font-size: 1.18rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.card-head p,
+.note p,
+.connector small {
+  color: var(--text-muted);
+}
+
+.card-head p {
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+
+.section-pill,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #d6e7f8;
+  background: #f1f7fd;
+  color: var(--primary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.connector-list {
+  display: grid;
+  gap: 12px;
+}
+
+.connector {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fbfdff;
+  transition: all 0.2s ease;
+}
+
+.connector:hover {
+  border-color: rgba(0, 82, 204, 0.3);
+  box-shadow: var(--shadow-md);
+}
+
+.connector-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.connector-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.connector small {
+  display: block;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.badge {
+  border-color: rgba(0, 82, 204, 0.18);
+}
+
+.note {
+  margin-top: 22px;
+  padding: 20px 22px;
+}
+
+.note p {
+  margin: 10px 0 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
+  .grid,
+  .hero-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: 100px 16px 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .page {
+    padding: 90px 12px 28px;
+  }
+
+  .hero,
+  .card,
+  .note {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .card-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

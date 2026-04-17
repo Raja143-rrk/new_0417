@@ -1,0 +1,82 @@
+# Rule engine mapping
+# Use this file only for deterministic regex post-processing rules.
+# Each rule must define pattern and replacement.
+# Do not add RAG knowledge, examples, or AI-only notes here.
+
+- name: mysql_remove_create_or_replace_function
+  pattern: "(?is)\\bcreate\\s+or\\s+replace\\s+function\\b"
+  replacement: "CREATE FUNCTION"
+  flags: "is"
+  description: "MySQL routines use CREATE FUNCTION without OR REPLACE."
+
+- name: mysql_remove_create_or_replace_procedure
+  pattern: "(?is)\\bcreate\\s+or\\s+replace\\s+procedure\\b"
+  replacement: "CREATE PROCEDURE"
+  flags: "is"
+  description: "MySQL routines use CREATE PROCEDURE without OR REPLACE."
+
+- name: mysql_remove_secure_routine_keyword
+  pattern: "(?is)\\bcreate\\s+secure\\s+(function|procedure)\\b"
+  replacement: "CREATE \\1"
+  flags: "is"
+  description: "Remove Snowflake SECURE keyword from routine DDL for MySQL."
+
+- name: mysql_fetch_first_to_limit
+  pattern: "(?is)\\bfetch\\s+first\\s+(\\d+)\\s+rows\\s+only\\b"
+  replacement: "LIMIT \\1"
+  flags: "is"
+  description: "Convert Snowflake FETCH FIRST n ROWS ONLY to MySQL LIMIT n."
+
+- name: mysql_current_timestamp_function
+  pattern: "(?is)\\bcurrent_timestamp\\s*\\(\\s*\\)"
+  replacement: "NOW()"
+  flags: "is"
+  description: "Map Snowflake CURRENT_TIMESTAMP() to MySQL NOW()."
+
+- name: mysql_current_date_function
+  pattern: "(?is)\\bcurrent_date\\s*\\(\\s*\\)"
+  replacement: "CURDATE()"
+  flags: "is"
+  description: "Map Snowflake CURRENT_DATE() to MySQL CURDATE()."
+
+- name: mysql_ceiling_function
+  pattern: "(?is)\\bceiling\\s*\\("
+  replacement: "CEIL("
+  flags: "is"
+  description: "Map Snowflake CEILING to MySQL CEIL."
+
+- name: mysql_not_equal_operator
+  pattern: "<>"
+  replacement: "!="
+  flags: ""
+  description: "Normalize Snowflake not-equal operator to MySQL !=."
+
+- name: mysql_dateadd_day_function
+  pattern: "(?is)\\bdateadd\\s*\\(\\s*day\\s*,\\s*([^,]+?)\\s*,\\s*([^)]+?)\\s*\\)"
+  replacement: "DATE_ADD(\\2, INTERVAL \\1 DAY)"
+  flags: "is"
+  description: "Convert Snowflake DATEADD(day, n, date) to MySQL DATE_ADD(date, INTERVAL n DAY)."
+
+- name: mysql_double_quoted_identifier_cleanup
+  pattern: '"([A-Za-z_][A-Za-z0-9_$]*)"'
+  replacement: "`\\1`"
+  flags: "is"
+  description: "Convert simple Snowflake double-quoted identifiers to MySQL backticks."
+
+- name: mysql_remove_language_sql_line
+  pattern: "(?im)^\\s*language\\s+sql\\s*$"
+  replacement: ""
+  flags: "im"
+  description: "Remove Snowflake LANGUAGE SQL lines from MySQL routine output."
+
+- name: mysql_remove_execute_as_clause
+  pattern: "(?im)^\\s*execute\\s+as\\s+(owner|caller)\\s*$"
+  replacement: ""
+  flags: "im"
+  description: "Remove Snowflake EXECUTE AS clauses from MySQL routine output."
+
+- name: mysql_autoincrement_keyword
+  pattern: "(?is)\\bautoincrement\\b"
+  replacement: "AUTO_INCREMENT"
+  flags: "is"
+  description: "Convert Snowflake AUTOINCREMENT to MySQL AUTO_INCREMENT."

@@ -1,0 +1,13 @@
+{
+  "identifier_aliases": {
+    "fname": "first_name",
+    "firstname": "first_name",
+    "lname": "last_name",
+    "lastname": "last_name",
+    "memberid": "member_id",
+    "memberidno": "member_id",
+    "userid": "user_id",
+    "useridentifier": "user_id",
+    "memberidentifier": "member_id"
+  }
+}
