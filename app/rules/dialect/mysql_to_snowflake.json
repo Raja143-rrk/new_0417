@@ -1,0 +1,54 @@
+{
+  "target_rules": [
+    "Use the object name from the source DDL exactly as the target object name unless the source SQL explicitly renames it.",
+    "For Snowflake tables, prefer standard CREATE TABLE with explicit columns over derived CREATE TABLE AS SELECT patterns.",
+    "Do not rename business columns during transformation unless the source SQL already renames them explicitly."
+  ],
+  "unsupported_object_types": {
+    "event": "Snowflake does not support MySQL EVENT objects directly. Convert them manually to Snowflake tasks or orchestration.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for Snowflake in this tool.",
+    "synonym": "Snowflake synonym migration is not supported by this tool for MySQL sources."
+  },
+  "object_rules": {
+    "table": [
+      "Preserve source business column names such as member_id, user_id, first_name, and last_name when they exist in the source definition.",
+      "Do not replace source identifiers with synthetic variants such as MEMBERID if the source DDL already defines MEMBER_ID."
+    ],
+    "view": [
+      "Convert MySQL view syntax to Snowflake view syntax without introducing source-only functions or quoting."
+    ],
+    "storedprocedure": [
+      "When converting MySQL procedures to Snowflake, prefer valid Snowflake SQL or JavaScript procedure syntax instead of copying MySQL routine syntax literally."
+    ],
+    "function": [
+      "When converting MySQL functions to Snowflake, preserve the return contract and use valid Snowflake function syntax."
+    ],
+    "trigger": [
+      "Convert MySQL triggers to a Snowflake equivalent using streams, tasks, and procedures instead of CREATE TRIGGER.",
+      "Preserve the trigger timing, event, source table, and business logic as closely as Snowflake semantics allow."
+    ]
+  },
+  "type_mappings": {
+    "INT": "NUMBER",
+    "INTEGER": "NUMBER",
+    "BIGINT": "NUMBER",
+    "SMALLINT": "NUMBER",
+    "TINYINT": "NUMBER",
+    "DECIMAL": "NUMBER",
+    "NUMERIC": "NUMBER",
+    "FLOAT": "FLOAT",
+    "DOUBLE": "FLOAT",
+    "CHAR": "VARCHAR",
+    "VARCHAR": "VARCHAR",
+    "TEXT": "VARCHAR",
+    "LONGTEXT": "VARCHAR",
+    "BOOLEAN": "BOOLEAN",
+    "BIT": "BOOLEAN",
+    "DATE": "DATE",
+    "TIME": "TIME",
+    "DATETIME": "TIMESTAMP_NTZ",
+    "TIMESTAMP": "TIMESTAMP_NTZ",
+    "BLOB": "BINARY",
+    "JSON": "VARIANT"
+  }
+}

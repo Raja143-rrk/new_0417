@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add User | Database Migrator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root { --bg:#f5f7fb; --surface:#ffffff; --surface2:#f8fafc; --border:#d9e2ec; --blue:#1f73c9; --text:#152238; --muted:#4c5d73; --dim:#73839a; --ok:#1f9d55; --err:#d14343; --display:'Sora', sans-serif; --body:'Manrope', sans-serif; --mono:Consolas, 'Courier New', monospace; --shadow:0 14px 36px rgba(15,23,42,.08); }
+* { box-sizing:border-box; }
+body { margin:0; position:relative; overflow-x:hidden; font-family:var(--body); color:var(--text); background:linear-gradient(180deg, #fbfcfe, var(--bg)); }
+body::before,body::after { content:""; position:fixed; inset:0; pointer-events:none; }
+body::before { opacity:1; background:linear-gradient(rgba(15,23,42,.03) 1px, transparent 1px),linear-gradient(90deg, rgba(15,23,42,.03) 1px, transparent 1px); background-size:56px 56px; mask-image:linear-gradient(to bottom, rgba(0,0,0,.3), transparent 78%); }
+body::after { opacity:1; background:radial-gradient(circle at 18% 14%, rgba(31,115,201,.08), transparent 0 18%),radial-gradient(circle at 82% 82%, rgba(31,115,201,.05), transparent 0 16%); }
+.topbar { position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--border); background:rgba(255,255,255,.92); backdrop-filter:blur(16px); }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-icon { width:36px; height:36px; display:grid; place-items:center; border-radius:10px; border:1px solid #ffd4c9; background:#fff7f4; color:#ef5b3f; }
+.brand-name { font-family:var(--display); font-size:1.08rem; font-weight:800; }
+.brand-name span { color:var(--blue); }
+.topbar-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.btn { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:10px; padding:10px 14px; background:#fff; color:var(--text); text-decoration:none; cursor:pointer; font:inherit; }
+.theme-select { min-width:110px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--text); font:600 .92rem var(--body); }
+.page { position:relative; z-index:1; max-width:980px; margin:0 auto; padding:28px 24px 56px; }
+.grid { display:grid; grid-template-columns:1.1fr .9fr; gap:22px; }
+.card { padding:24px; background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); }
+.card h1,.card h2 { margin:0 0 12px; font-family:var(--display); }
+.card p { color:var(--muted); line-height:1.55; }
+.form-group { margin-bottom:14px; }
+label { display:block; margin-bottom:8px; color:var(--muted); font-size:.84rem; }
+.input,select { width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font:inherit; outline:none; }
+.input:focus,select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(31,115,201,.12); }
+.primary { border:0; background:var(--blue); color:#fff; font-weight:700; }
+.msg { margin-top:12px; font-size:.82rem; display:none; font-family:var(--mono); }
+.msg.ok { color:var(--ok); }
+.msg.err { color:var(--err); }
+.user-list { display:grid; gap:10px; margin-top:16px; }
+.user-item { padding:12px 14px; border-radius:14px; border:1px solid var(--border); background:#fbfdff; }
+.user-item strong { display:block; margin-bottom:4px; }
+.input,select,.user-item { font-family:var(--mono); }
+:root[data-theme="dark"] body { background:linear-gradient(180deg, #09111f, #0b1220); color:#e5e7eb; }
+:root[data-theme="dark"] body::before { background:linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px),linear-gradient(90deg, rgba(148,163,184,.045) 1px, transparent 1px); }
+:root[data-theme="dark"] body::after { background:radial-gradient(circle at 18% 14%, rgba(96,165,250,.16), transparent 0 18%),radial-gradient(circle at 82% 82%, rgba(245,158,11,.08), transparent 0 16%); }
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .user-item { background:#111a2b; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] .btn,
+:root[data-theme="dark"] .theme-select,
+:root[data-theme="dark"] .input,
+:root[data-theme="dark"] select { background:#162338; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] option { background:#162338; color:#e5e7eb; }
+:root[data-theme="dark"] .card p,
+:root[data-theme="dark"] label { color:#94a3b8; }
+:root[data-theme="dark"] .brand-icon { background:#1c2436; border-color:#3b4b68; color:#60a5fa; }
+@media (max-width:900px) { .grid { grid-template-columns:1fr; } .topbar { flex-direction:column; align-items:flex-start; } }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-database"></i></div>
+      <div class="brand-name">Database <span>Migrator</span></div>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn" href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+      <button class="btn" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="grid">
+      <section class="card">
+        <h1>Add User</h1>
+        <p>Create additional login users for the current frontend-auth workflow. Newly added users can sign in from the login page immediately.</p>
+        <form id="addUserForm">
+          <div class="form-group">
+            <label for="newUsername">Username</label>
+            <input class="input" id="newUsername" placeholder="Enter username">
+          </div>
+          <div class="form-group">
+            <label for="newPassword">Password</label>
+            <input class="input" id="newPassword" type="password" placeholder="Enter password">
+          </div>
+          <div class="form-group">
+            <label for="newRole">Role</label>
+            <select id="newRole">
+              <option value="Migration Operator">Migration Operator</option>
+              <option value="Migration Admin">Migration Admin</option>
+              <option value="Viewer">Viewer</option>
+            </select>
+          </div>
+          <button class="btn primary" type="submit"><i class="fa-solid fa-user-plus"></i> Create User</button>
+          <div class="msg ok" id="okMsg">User created successfully.</div>
+          <div class="msg err" id="errMsg">Unable to create user.</div>
+        </form>
+      </section>
+
+      <aside class="card">
+        <h2>Existing Users</h2>
+        <p>These users are stored in browser local storage for the current machine.</p>
+        <div class="user-list" id="userList"></div>
+      </aside>
+    </div>
+  </div>
+
+<script src="rbac.js"></script>
+<script>
+'use strict';
+const THEME_KEY = 'dbm_theme';
+
+function resolveTheme(pref) {
+  if (pref === 'light' || pref === 'dark') return pref;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function changeTheme(pref) {
+  localStorage.setItem(THEME_KEY, pref);
+  document.documentElement.dataset.theme = resolveTheme(pref);
+}
+
+function initTheme() {
+  const pref = localStorage.getItem(THEME_KEY) || 'auto';
+  const select = document.getElementById('themeSelect');
+  if (select) select.value = pref;
+  document.documentElement.dataset.theme = resolveTheme(pref);
+}
+
+if (!DBM_RBAC.requirePageAccess('user_management', 'home.html')) {
+  throw new Error('RBAC redirect in progress');
+}
+if (!DBM_RBAC.hasPermission('manageUsers')) {
+  window.location.replace('home.html');
+}
+initTheme();
+
+function getUsers() {
+  return DBM_RBAC.getUsers();
+}
+
+function saveUsers(users) {
+  DBM_RBAC.saveUsers(users);
+}
+
+function renderUsers() {
+  const users = getUsers();
+  const list = document.getElementById('userList');
+  list.innerHTML = Object.entries(users).map(([username, meta]) => `
+    <div class="user-item">
+      <strong>${username}</strong>
+      <div>${DBM_RBAC.roleLabel(meta.role)}</div>
+    </div>
+  `).join('');
+}
+
+function logout() {
+  DBM_RBAC.logout();
+  window.location.replace('login.html');
+}
+
+document.getElementById('addUserForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const okMsg = document.getElementById('okMsg');
+  const errMsg = document.getElementById('errMsg');
+  okMsg.style.display = 'none';
+  errMsg.style.display = 'none';
+
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const role = document.getElementById('newRole').value;
+
+  if (!username || !password) {
+    errMsg.textContent = 'Username and password are required.';
+    errMsg.style.display = 'block';
+    return;
+  }
+
+  const users = getUsers();
+  if (users[username]) {
+    errMsg.textContent = 'That username already exists.';
+    errMsg.style.display = 'block';
+    return;
+  }
+
+  users[username] = { password, role, home: 'home.html' };
+  saveUsers(users);
+  renderUsers();
+  document.getElementById('addUserForm').reset();
+  okMsg.style.display = 'block';
+});
+
+renderUsers();
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "target_rules": [
+    "Use MySQL-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit Snowflake-only clauses, object parameters, or warehouse-specific syntax."
+  ],
+  "unsupported_object_types": {
+    "trigger": "Snowflake trigger migration is not supported because Snowflake sources do not provide trigger objects in this tool.",
+    "event": "Snowflake event migration is not supported by this tool.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for MySQL in this tool.",
+    "sequence": "MySQL does not support standalone sequence objects in a Snowflake-compatible way. Convert manually to AUTO_INCREMENT or sequence emulation.",
+    "synonym": "MySQL does not support synonym objects. Convert manually to views or application-level indirection."
+  },
+  "object_rules": {
+    "table": [
+      "Convert Snowflake data types and defaults to valid MySQL equivalents.",
+      "Preserve source business column names needed for later data copy."
+    ],
+    "storedprocedure": [
+      "Convert Snowflake procedure syntax to one valid MySQL CREATE PROCEDURE statement without DELIMITER directives."
+    ],
+    "function": [
+      "Convert Snowflake function syntax to one valid MySQL CREATE FUNCTION statement."
+    ]
+  },
+  "type_mappings": {
+    "NUMBER": "DECIMAL",
+    "NUMERIC": "DECIMAL",
+    "DECIMAL": "DECIMAL",
+    "FLOAT": "DOUBLE",
+    "DOUBLE": "DOUBLE",
+    "STRING": "VARCHAR",
+    "VARCHAR": "VARCHAR",
+    "TEXT": "TEXT",
+    "BOOLEAN": "BOOLEAN",
+    "DATE": "DATE",
+    "TIME": "TIME",
+    "TIMESTAMP_NTZ": "DATETIME",
+    "TIMESTAMP_LTZ": "DATETIME",
+    "TIMESTAMP_TZ": "DATETIME",
+    "BINARY": "BLOB",
+    "VARIANT": "JSON",
+    "OBJECT": "JSON",
+    "ARRAY": "JSON"
+  }
+}

@@ -1,0 +1,16 @@
+# Rule engine mapping
+# Use this file only for deterministic regex post-processing rules.
+# Each rule must define pattern and replacement.
+# Do not add RAG knowledge, examples, or AI-only notes here.
+
+- name: normalize_duplicate_semicolons
+  pattern: ";{2,}"
+  replacement: ";"
+  flags: "im"
+  description: "Collapse duplicate SQL statement terminators."
+
+- name: remove_delimiter_directives
+  pattern: "^\\s*delimiter\\s+\\S+\\s*$"
+  replacement: ""
+  flags: "im"
+  description: "Remove client-only delimiter directives before target execution."

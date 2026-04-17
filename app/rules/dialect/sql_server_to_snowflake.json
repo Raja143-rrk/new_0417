@@ -1,0 +1,29 @@
+{
+  "target_rules": [
+    "Use Snowflake-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit SQL Server-only brackets, GO batches, or session settings."
+  ],
+  "unsupported_object_types": {
+    "table": "SQL Server table extraction is not implemented in this tool yet. Skip table migration from SQL Server or add deterministic extraction support first.",
+    "trigger": "Snowflake does not support SQL Server-style table triggers directly. Convert them manually to a Snowflake stream/task/procedure pattern.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for Snowflake in this tool."
+  },
+  "object_rules": {
+    "view": [
+      "Convert SQL Server view syntax to valid Snowflake view syntax."
+    ],
+    "storedprocedure": [
+      "Convert SQL Server procedure syntax to valid Snowflake procedure syntax without introducing placeholder database names."
+    ],
+    "function": [
+      "Convert SQL Server function syntax to valid Snowflake function syntax."
+    ],
+    "sequence": [
+      "Convert SQL Server sequences to valid Snowflake CREATE SEQUENCE syntax when present."
+    ],
+    "synonym": [
+      "Convert SQL Server synonyms only when they can be represented safely in Snowflake; otherwise prefer a deterministic skip."
+    ]
+  }
+}

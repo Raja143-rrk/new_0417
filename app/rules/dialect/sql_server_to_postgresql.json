@@ -1,0 +1,29 @@
+{
+  "target_rules": [
+    "Use PostgreSQL-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit SQL Server-only brackets, GO batches, or session settings."
+  ],
+  "unsupported_object_types": {
+    "table": "SQL Server table extraction is not implemented in this tool yet. Skip table migration from SQL Server or add deterministic extraction support first.",
+    "synonym": "PostgreSQL synonym migration is not supported by this tool for SQL Server sources.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for PostgreSQL in this tool."
+  },
+  "object_rules": {
+    "view": [
+      "Convert SQL Server view syntax to valid PostgreSQL view syntax."
+    ],
+    "storedprocedure": [
+      "Convert SQL Server procedure syntax to valid PostgreSQL CREATE PROCEDURE syntax."
+    ],
+    "function": [
+      "Convert SQL Server function syntax to valid PostgreSQL CREATE FUNCTION syntax."
+    ],
+    "trigger": [
+      "Convert SQL Server trigger syntax to valid PostgreSQL trigger plus function semantics where PostgreSQL requires them."
+    ],
+    "sequence": [
+      "Convert SQL Server sequences to valid PostgreSQL CREATE SEQUENCE syntax when present."
+    ]
+  }
+}

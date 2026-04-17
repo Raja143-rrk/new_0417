@@ -1,0 +1,27 @@
+{
+  "target_rules": [
+    "Use PostgreSQL-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Prefer standard PostgreSQL CREATE statements with explicit definitions instead of derived objects."
+  ],
+  "unsupported_object_types": {
+    "event": "PostgreSQL does not support MySQL EVENT objects directly. Convert them manually to pg_cron, external scheduling, or orchestration.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for PostgreSQL in this tool.",
+    "synonym": "PostgreSQL synonym migration is not supported by this tool for MySQL sources."
+  },
+  "object_rules": {
+    "table": [
+      "Preserve source business column names and key columns exactly when possible.",
+      "Do not collapse distinct source columns into renamed PostgreSQL identifiers unless the source SQL already does so."
+    ],
+    "trigger": [
+      "MySQL trigger timing and event semantics must remain a trigger in PostgreSQL, not a stored procedure."
+    ],
+    "storedprocedure": [
+      "Convert MySQL procedure syntax to valid PostgreSQL CREATE PROCEDURE syntax."
+    ],
+    "function": [
+      "Convert MySQL function syntax to valid PostgreSQL CREATE FUNCTION syntax."
+    ]
+  }
+}

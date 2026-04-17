@@ -1,0 +1,413 @@
+.jobs-page {
+  min-height: 100vh;
+  font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  color: #152238;
+  background:
+    radial-gradient(circle at top left, rgba(31, 115, 201, 0.12), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(243, 116, 51, 0.1), transparent 18%),
+    linear-gradient(180deg, #fbfcfe, #f4f7fb);
+}
+
+.jobs-page * {
+  box-sizing: border-box;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 30px;
+  border-bottom: 1px solid #d9e2ec;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.brand,
+.topbar-actions,
+.job-top,
+.chip-row,
+.task-head,
+.toolbar,
+.schedule-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.brand {
+  align-items: center;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(31, 115, 201, 0.1);
+  color: #1f73c9;
+}
+
+.brand-name {
+  font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #152238;
+}
+
+.brand-name .db-text {
+  color: #424242;
+}
+
+.brand-name .migrator-text,
+.hero h1 span,
+.hero-kicker {
+  color: #1f73c9;
+}
+
+.nav-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d9e2ec;
+  border-radius: 10px;
+  background: #fff;
+  color: #152238;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+  border-color: #1f73c9;
+  color: #1f73c9;
+}
+
+.btn,
+.input,
+.select,
+.textarea {
+  border: 1px solid #d9e2ec;
+  border-radius: 12px;
+  font: 600 0.94rem "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  background: #fff;
+  color: #152238;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #1f73c9;
+  color: #fff;
+  border-color: #1f73c9;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.page {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 30px 24px 60px;
+}
+
+.hero,
+.panel {
+  border: 1px solid #d9e2ec;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
+}
+
+.hero {
+  margin-bottom: 22px;
+  padding: 26px 28px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.hero p,
+.hint,
+.task-sub,
+.panel-sub,
+.job-meta,
+.empty {
+  color: #708198;
+}
+
+.hero p {
+  max-width: 620px;
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid #d6e7f8;
+  border-radius: 999px;
+  background: #f1f7fd;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(360px, 440px) minmax(0, 1fr);
+  gap: 22px;
+}
+
+.panel {
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #d9e2ec;
+}
+
+.panel-title,
+.section-title {
+  font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+.panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.panel-sub {
+  margin-top: 4px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.panel-body {
+  padding: 22px 24px;
+}
+
+.job-list,
+.task-list {
+  display: grid;
+  gap: 14px;
+}
+
+.job-card,
+.metric,
+.task-row,
+.note {
+  border: 1px solid #d9e2ec;
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.job-card {
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.job-card.active {
+  border-color: rgba(31, 115, 201, 0.45);
+  box-shadow: 0 10px 24px rgba(31, 115, 201, 0.12);
+  background: #fff;
+}
+
+.job-top {
+  justify-content: space-between;
+}
+
+.job-name,
+.task-main {
+  font-weight: 700;
+}
+
+.job-meta {
+  margin-top: 8px;
+  line-height: 1.5;
+  font-size: 0.87rem;
+}
+
+.job-chips {
+  margin-top: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #eef4fb;
+  color: #152238;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.status-success {
+  background: #eaf8ef;
+  color: #1f9d55;
+}
+
+.status-error {
+  background: #fbecec;
+  color: #d14343;
+}
+
+.status-partial {
+  background: #fff5e8;
+  color: #d98f1d;
+}
+
+.status-stopped {
+  background: #edf2f7;
+  color: #5b6b7d;
+}
+
+.metric-grid,
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.metric {
+  padding: 14px 16px;
+}
+
+.metric-label {
+  color: #708198;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  margin-top: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.section {
+  margin-top: 24px;
+}
+
+.section:first-child {
+  margin-top: 0;
+}
+
+.section-title {
+  margin: 0 0 12px;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: #fff;
+  color: #152238;
+}
+
+.textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.task-row,
+.note {
+  padding: 16px;
+}
+
+.task-sub,
+.note,
+.hint {
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.schedule-state,
+.top-gap {
+  margin-top: 12px;
+}
+
+.note {
+  background: #f8fbff;
+}
+
+.search {
+  min-width: 220px;
+}
+
+@media (max-width: 1080px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid,
+  .schedule-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .metric-grid,
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+}

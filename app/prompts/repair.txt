@@ -1,0 +1,27 @@
+Repair the failed {target_db} SQL for a migrated {object_type}.
+
+Target rules:
+{target_rules}
+
+Object-specific rules:
+{object_rules}
+
+Additional constraints:
+{extra_rules}
+
+RAG context:
+{rag_context}
+
+Use the RAG context above. Fix syntax and structure defects without changing the object type.
+
+Object name: {object_name}
+Source database: {source_db}
+Target database: {target_db}
+Execution error:
+{error_message}
+
+Original source SQL:
+{source_sql}
+
+Failed target SQL:
+{failed_sql}

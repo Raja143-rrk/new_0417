@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobs &amp; Schedule | Database Migrator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root { --bg:#f5f7fb; --surface:#fff; --surface2:#f8fbff; --border:#d9e2ec; --text:#152238; --muted:#506176; --dim:#708198; --blue:#1f73c9; --green:#1f9d55; --amber:#d98f1d; --red:#d14343; --display:'Sora', sans-serif; --body:'Manrope', sans-serif; --mono:'Consolas', 'Courier New', monospace; --shadow:0 16px 38px rgba(15,23,42,.08); }
+* { box-sizing:border-box; }
+body { margin:0; font-family:var(--body); color:var(--text); background:linear-gradient(180deg, #fbfcfe, var(--bg)); }
+.topbar { position:sticky; top:0; z-index:10; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 28px; border-bottom:1px solid var(--border); background:rgba(255,255,255,.92); backdrop-filter:blur(16px); }
+.brand { display:flex; align-items:center; gap:12px; font-family:var(--display); font-weight:700; }
+.brand-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:14px; border:1px solid #d6e7f8; background:#f4f9ff; color:var(--blue); }
+.brand span { color:var(--blue); }
+.actions { display:flex; gap:10px; flex-wrap:wrap; }
+.btn, .input, .select, .textarea { border:1px solid var(--border); border-radius:12px; font:600 .94rem var(--body); }
+.btn { display:inline-flex; align-items:center; gap:8px; padding:11px 16px; background:#fff; color:var(--text); text-decoration:none; cursor:pointer; }
+.btn-primary { background:var(--blue); color:#fff; border-color:var(--blue); }
+.btn:disabled { opacity:.55; cursor:not-allowed; }
+.page { max-width:1380px; margin:0 auto; padding:30px 24px 60px; }
+.hero { margin-bottom:22px; padding:30px; border:1px solid var(--border); border-radius:22px; background:#fff; box-shadow:var(--shadow); }
+.hero h1 { margin:14px 0 0; font:800 clamp(2rem, 4vw, 3.4rem) var(--display); letter-spacing:-.04em; }
+.hero h1 span { color:var(--blue); }
+.hero p { margin:14px 0 0; max-width:860px; color:var(--dim); line-height:1.65; }
+.hero-kicker { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid #d6e7f8; border-radius:999px; background:#f1f7fd; color:var(--blue); font:700 .74rem var(--mono); letter-spacing:.15em; text-transform:uppercase; }
+.shell { display:grid; grid-template-columns:minmax(360px, 440px) minmax(0, 1fr); gap:22px; }
+.panel { border:1px solid var(--border); border-radius:20px; background:#fff; box-shadow:var(--shadow); overflow:hidden; }
+.panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:22px 24px 16px; border-bottom:1px solid var(--border); }
+.panel-title { font:700 1.05rem var(--display); letter-spacing:-.03em; }
+.panel-sub { display:none; margin-top:6px; color:var(--dim); font-size:.92rem; }
+.panel-body { padding:22px 24px; }
+.job-list { display:grid; gap:14px; max-height:920px; overflow:auto; }
+.job-card { width:100%; text-align:left; padding:18px; border:1px solid var(--border); border-radius:16px; background:var(--surface2); cursor:pointer; }
+.job-card.active { border-color:rgba(31,115,201,.45); box-shadow:0 10px 24px rgba(31,115,201,.12); background:#fff; }
+.job-top, .chip-row, .metric-grid, .schedule-grid, .task-head { display:flex; gap:10px; flex-wrap:wrap; }
+.job-top { justify-content:space-between; align-items:center; }
+.job-name { font-weight:800; font-size:1rem; }
+.job-meta, .empty, .hint, .task-sub { color:var(--dim); }
+.job-meta { margin-top:8px; line-height:1.55; font-size:.9rem; }
+.chip { display:inline-flex; align-items:center; padding:7px 10px; border-radius:999px; background:#eef4fb; color:var(--text); font:700 .75rem var(--mono); letter-spacing:.03em; }
+.status-success { background:#eaf8ef; color:var(--green); }
+.status-error { background:#fbecec; color:var(--red); }
+.status-partial { background:#fff5e8; color:var(--amber); }
+.status-stopped, .status-skipped { background:#edf2f7; color:#5b6b7d; }
+.metric-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+.metric { padding:14px 16px; border:1px solid var(--border); border-radius:14px; background:var(--surface2); }
+.metric-label { color:var(--dim); font:700 .72rem var(--mono); letter-spacing:.12em; text-transform:uppercase; }
+.metric-value { margin-top:8px; font:800 1.2rem var(--display); }
+.section { margin-top:24px; }
+.section:first-child { margin-top:0; }
+.section-title { margin:0 0 12px; font:700 1rem var(--display); }
+.schedule-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+.field { display:grid; gap:8px; }
+.field.full { grid-column:1 / -1; }
+.input, .select, .textarea { width:100%; padding:12px 14px; background:#fff; color:var(--text); }
+.textarea { min-height:92px; resize:vertical; }
+.schedule-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+.task-list { display:grid; gap:12px; }
+.task-row { padding:16px; border:1px solid var(--border); border-radius:14px; background:var(--surface2); }
+.task-main { font-weight:700; }
+.task-sub { margin-top:8px; font-size:.92rem; line-height:1.5; }
+.note { padding:14px 16px; border:1px dashed #c8d8ea; border-radius:14px; background:#f6fbff; color:var(--muted); line-height:1.6; }
+.toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.search { min-width:220px; }
+.toolbar .select { min-width:170px; }
+:root[data-theme="dark"] body { background:linear-gradient(180deg, #09111f, #0b1220); color:#e5e7eb; }
+:root[data-theme="dark"] .topbar, :root[data-theme="dark"] .hero, :root[data-theme="dark"] .panel { background:#111a2b; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] .btn, :root[data-theme="dark"] .input, :root[data-theme="dark"] .select, :root[data-theme="dark"] .textarea { background:#162338; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] .job-card, :root[data-theme="dark"] .metric, :root[data-theme="dark"] .task-row, :root[data-theme="dark"] .note { background:#162338; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] .job-meta, :root[data-theme="dark"] .hint, :root[data-theme="dark"] .task-sub, :root[data-theme="dark"] .panel-sub, :root[data-theme="dark"] .hero p, :root[data-theme="dark"] .metric-label { color:#94a3b8; }
+:root[data-theme="dark"] .chip { background:#22324a; color:#d6deea; }
+:root[data-theme="dark"] .status-success { background:#173421; color:#6ad28f; }
+:root[data-theme="dark"] .status-error { background:#3a1f24; color:#ff9f9f; }
+:root[data-theme="dark"] .status-partial { background:#3d2d18; color:#f4c27c; }
+:root[data-theme="dark"] .status-stopped, :root[data-theme="dark"] .status-skipped { background:#263548; color:#a8b7c9; }
+@media (max-width:1080px) { .shell { grid-template-columns:1fr; } .metric-grid, .schedule-grid { grid-template-columns:1fr 1fr; } }
+@media (max-width:720px) { .topbar { flex-direction:column; align-items:flex-start; } .metric-grid, .schedule-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-calendar-check"></i></div>
+      <div>Database <span>Migrator</span></div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+      <a class="btn" href="migration-history.html"><i class="fa-solid fa-chart-column"></i> Run History</a>
+      <button class="btn" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <section class="hero">
+      <div class="hero-kicker"><i class="fa-solid fa-diagram-project"></i> Job Templates Control Plane</div>
+      <h1>Jobs &amp; <span>Schedule</span></h1>
+      <p>Use this workspace to manage scheduled job templates and review their execution runs. Every migration execution is stored as one run, and every migrated object inside that execution is stored as one task.</p>
+    </section>
+
+    <section class="shell">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" title="Stored migration runs with task counts, attached schedules, and replay controls.">Job Templates And Runs</div>
+            <div class="panel-sub">Stored migration runs with task counts, attached schedules, and replay controls.</div>
+          </div>
+          <div class="toolbar">
+            <input id="jobSearch" class="input search" type="text" placeholder="Search source, target, run id..." oninput="renderJobList()" title="Search by source, target, run id, or task names.">
+            <select id="jobStatusFilter" class="select" onchange="renderJobList()" title="Filter the job list by execution status.">
+              <option value="">All Statuses</option>
+              <option value="success">Success</option>
+              <option value="partial">Partial</option>
+              <option value="error">Error</option>
+              <option value="stopped">Stopped</option>
+            </select>
+            <select id="jobTriggerFilter" class="select" onchange="renderJobList()" title="Filter the job list by schedule trigger type.">
+              <option value="">All Triggers</option>
+              <option value="scheduled_trigger">Scheduled Trigger</option>
+              <option value="event_trigger">Event Trigger</option>
+              <option value="none">No Schedule</option>
+            </select>
+            <button class="btn" type="button" onclick="exportJobs('json')" title="Export the currently filtered job list as JSON."><i class="fa-regular fa-file-code"></i> JSON</button>
+            <button class="btn" type="button" onclick="exportJobs('csv')" title="Export the currently filtered job list as CSV."><i class="fa-solid fa-file-csv"></i> CSV</button>
+            <button class="btn" type="button" onclick="loadJobs()" title="Reload the latest jobs and schedules from the backend."><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="job-list" id="jobList"><div class="empty">No migration jobs are stored yet.</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" title="Select a job template or run to inspect tasks and schedule configuration.">Template Details</div>
+            <div class="panel-sub" id="detailSubtitle">Select a job template or run to inspect tasks and schedule configuration.</div>
+          </div>
+        </div>
+        <div class="panel-body" id="jobDetail">
+          <div class="empty">Select a migration job from the left catalog.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script src="rbac.js"></script>
+<script>
+'use strict';
+const THEME_KEY = 'dbm_theme';
+const API_BASE = 'http://127.0.0.1:8000/api';
+const SESSION_INFO = DBM_RBAC.getSession();
+const CAN_MANAGE_SCHEDULES = DBM_RBAC.hasPermission('manageSchedules', SESSION_INFO.role);
+const IS_VIEW_ONLY = DBM_RBAC.hasPermission('viewOnly', SESSION_INFO.role);
+const APP = { jobs: [], filtered: [], selectedJobId: '' };
+
+if (!DBM_RBAC.requirePageAccess('jobs', 'home.html')) {
+  throw new Error('RBAC redirect in progress');
+}
+
+function resolveTheme(pref) {
+  if (pref === 'light' || pref === 'dark') return pref;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function initTheme() {
+  document.documentElement.dataset.theme = resolveTheme(localStorage.getItem(THEME_KEY) || 'auto');
+}
+
+function logout() {
+  DBM_RBAC.logout();
+  window.location.replace('login.html');
+}
+
+async function getJson(url, options) {
+  const response = await fetch(url, options || {});
+  let data = null;
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok || data?.status === 'error') {
+    throw new Error(data?.message || `HTTP ${response.status}`);
+  }
+  return data;
+}
+
+function escHtml(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function fmtDate(value) {
+  if (!value) return '--';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+}
+
+function getStatusClass(status) {
+  const key = String(status || '').toLowerCase();
+  if (key === 'success') return 'status-success';
+  if (key === 'error') return 'status-error';
+  if (key === 'partial') return 'status-partial';
+  return 'status-stopped';
+}
+
+function getFilteredJobs() {
+  const search = document.getElementById('jobSearch').value.trim().toLowerCase();
+  const status = document.getElementById('jobStatusFilter').value;
+  const trigger = document.getElementById('jobTriggerFilter').value;
+  return APP.jobs.filter((job) => {
+    const text = [
+      job.job_id,
+      job.job_name,
+      job.source_db,
+      job.target_db,
+      ...(job.tasks || []).map((task) => `${task.object_type} ${task.object_name}`)
+    ].join(' ').toLowerCase();
+    const scheduleType = job.schedule?.trigger_type || 'none';
+    return (!search || text.includes(search))
+      && (!status || String(job.status || '').toLowerCase() === status)
+      && (!trigger || scheduleType === trigger);
+  });
+}
+
+function renderJobList() {
+  const host = document.getElementById('jobList');
+  APP.filtered = getFilteredJobs();
+  if (!APP.filtered.length) {
+    host.innerHTML = '<div class="empty">No jobs match the current filter.</div>';
+    renderJobDetail(null);
+    return;
+  }
+  if (!APP.filtered.some((job) => job.job_id === APP.selectedJobId)) {
+    APP.selectedJobId = APP.filtered[0].job_id;
+  }
+  host.innerHTML = APP.filtered.map((job) => {
+    const schedule = job.schedule;
+    const scheduleLabel = !schedule ? 'No schedule' : schedule.trigger_type === 'event_trigger' ? `Event: ${schedule.event_name || 'configured'}` : `Cron: ${schedule.cron_expression || 'configured'}`;
+    return `
+      <button type="button" class="job-card${job.job_id === APP.selectedJobId ? ' active' : ''}" onclick="selectJob('${escHtml(job.job_id)}')">
+        <div class="job-top">
+          <div class="job-name">${escHtml(job.job_name)}</div>
+          <div class="chip ${getStatusClass(job.status)}">${escHtml(job.status)}</div>
+        </div>
+        <div class="job-meta">Template ID: ${escHtml(job.job_id)}<br>Latest execution window: ${escHtml(fmtDate(job.started_at))} to ${escHtml(fmtDate(job.completed_at))}</div>
+        <div class="chip-row" style="margin-top:12px;">
+          <div class="chip">${escHtml(job.task_count)} task(s)</div>
+          <div class="chip">${escHtml(job.successful_tasks)} success</div>
+          <div class="chip">${escHtml(job.failed_tasks)} failed</div>
+          <div class="chip">${escHtml(scheduleLabel)}</div>
+        </div>
+      </button>
+    `;
+  }).join('');
+  const selected = APP.filtered.find((job) => job.job_id === APP.selectedJobId) || null;
+  renderJobDetail(selected);
+}
+
+function getTaskTypeSummary(tasks) {
+  const counts = {};
+  (tasks || []).forEach((task) => {
+    counts[task.object_type] = (counts[task.object_type] || 0) + 1;
+  });
+  return Object.entries(counts).map(([key, value]) => `${key}: ${value}`).join(' | ') || 'No task details available.';
+}
+
+function renderScheduleFields(schedule) {
+  const triggerType = schedule?.trigger_type || 'scheduled_trigger';
+  return `
+    <div class="field">
+      <label for="triggerType">Trigger Type</label>
+      <select id="triggerType" class="select" onchange="toggleScheduleFields()" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}>
+        <option value="scheduled_trigger" ${triggerType === 'scheduled_trigger' ? 'selected' : ''}>Scheduled Trigger</option>
+        <option value="event_trigger" ${triggerType === 'event_trigger' ? 'selected' : ''}>Event Trigger</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="scheduleEnabled">Status</label>
+      <select id="scheduleEnabled" class="select" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}>
+        <option value="true" ${(schedule?.enabled ?? true) ? 'selected' : ''}>Enabled</option>
+        <option value="false" ${schedule && !schedule.enabled ? 'selected' : ''}>Disabled</option>
+      </select>
+    </div>
+    <div class="field full" id="cronField">
+      <label for="cronExpression">Cron Expression</label>
+      <input id="cronExpression" class="input" value="${escHtml(schedule?.cron_expression || '0 0/30 * * * ?')}" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}>
+    </div>
+    <div class="field full" id="eventField" style="display:none;">
+      <label for="eventName">Event Name</label>
+      <input id="eventName" class="input" value="${escHtml(schedule?.event_name || '')}" placeholder="e.g. source-schema-ready" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}>
+    </div>
+    <div class="field">
+      <label for="scheduleTimezone">Timezone</label>
+      <input id="scheduleTimezone" class="input" value="${escHtml(schedule?.timezone || 'Asia/Calcutta')}" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}>
+    </div>
+    <div class="field">
+      <label for="scheduleStartAt">Start At</label>
+      <input id="scheduleStartAt" type="datetime-local" class="input" value="${toDateTimeLocalValue(schedule?.start_at)}" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}>
+    </div>
+    <div class="field full">
+      <label for="scheduleDescription">Description</label>
+      <textarea id="scheduleDescription" class="textarea" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}>${escHtml(schedule?.description || '')}</textarea>
+    </div>
+  `;
+}
+
+function toDateTimeLocalValue(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (input) => String(input).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function renderJobDetail(job) {
+  const host = document.getElementById('jobDetail');
+  const subtitle = document.getElementById('detailSubtitle');
+  if (!job) {
+    subtitle.textContent = 'Select a job template or run to inspect tasks and schedule configuration.';
+    host.innerHTML = '<div class="empty">Select a migration job template from the left catalog.</div>';
+    return;
+  }
+  subtitle.textContent = `${job.source_db} -> ${job.target_db} | ${job.task_count} task(s) | Latest run ${job.run_id}`;
+  const schedule = job.schedule || null;
+  host.innerHTML = `
+    <div class="section">
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Job Status</div><div class="metric-value">${escHtml(job.status)}</div></div>
+        <div class="metric"><div class="metric-label">Tasks</div><div class="metric-value">${escHtml(job.task_count)}</div></div>
+        <div class="metric"><div class="metric-label">Successful</div><div class="metric-value">${escHtml(job.successful_tasks)}</div></div>
+        <div class="metric"><div class="metric-label">Failed</div><div class="metric-value">${escHtml(job.failed_tasks)}</div></div>
+      </div>
+      <div class="note">
+        <strong>Template Model:</strong> this scheduled job template replays a saved migration definition. Each execution creates one migration run, and every migrated object inside that run is one task. The latest run currently contains <strong>${escHtml(job.task_count)}</strong> task(s), with the breakdown <strong>${escHtml(getTaskTypeSummary(job.tasks))}</strong>.
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">Schedule Designer</h3>
+      <div class="schedule-grid">${renderScheduleFields(schedule)}</div>
+      <div class="hint" style="margin-top:12px;">Use an event trigger to wait for a named event such as a source readiness signal. Use a scheduled trigger to maintain a cron-style execution policy similar to Databricks job scheduling. The schedule stays attached to this template and produces new execution runs over time.</div>
+      <div class="schedule-actions">
+        <button class="btn" type="button" onclick="rerunJob('${escHtml(job.job_id)}')" ${DBM_RBAC.hasPermission('operateMigrations') ? '' : 'disabled'}><i class="fa-solid fa-play"></i> Run Template Now</button>
+        <button class="btn btn-primary" type="button" onclick="saveSchedule('${escHtml(job.job_id)}')" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}><i class="fa-solid fa-floppy-disk"></i> Save Schedule</button>
+        <button class="btn" type="button" onclick="recordEventTrigger('${escHtml(job.job_id)}')" id="eventTriggerBtn" ${CAN_MANAGE_SCHEDULES ? '' : 'disabled'}><i class="fa-solid fa-bolt"></i> Record Event Trigger</button>
+      </div>
+      <div class="hint" id="scheduleState" style="margin-top:10px;">${schedule ? `Current template schedule saved. Last trigger: ${fmtDate(schedule.last_triggered_at)} | Trigger count: ${schedule.trigger_count || 0} | Last run status: ${escHtml(schedule.last_run_status || '--')} | Next run: ${fmtDate(schedule.next_run_at)}` : 'No schedule is attached to this template yet.'}</div>
+      ${IS_VIEW_ONLY ? '<div class="note" style="margin-top:14px;">Viewer access is read-only. You can inspect jobs, tasks, and schedules, but you cannot create or modify schedule definitions.</div>' : ''}
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">Latest Run Task Breakdown</h3>
+      <div class="task-list">
+        ${(job.tasks || []).length ? job.tasks.map((task) => `
+          <div class="task-row">
+            <div class="task-head">
+              <div class="task-main">${escHtml(task.object_type)} :: ${escHtml(task.object_name)}</div>
+              <div class="chip ${getStatusClass(task.status)}">${escHtml(task.status)}</div>
+            </div>
+            <div class="task-sub">
+              Source: ${escHtml(task.source_db)} | Target: ${escHtml(task.target_db)} | Rows migrated: ${escHtml(task.rows_migrated || 0)} | Source count: ${escHtml(task.source_row_count ?? '--')} | Target count: ${escHtml(task.target_row_count ?? '--')} | Missing: ${escHtml(task.missing_row_count ?? '--')}
+            </div>
+          </div>
+        `).join('') : '<div class="empty">No task records available for this job.</div>'}
+      </div>
+    </div>
+  `;
+  toggleScheduleFields();
+}
+
+function toggleScheduleFields() {
+  const triggerType = document.getElementById('triggerType');
+  if (!triggerType) return;
+  const isEvent = triggerType.value === 'event_trigger';
+  const cronField = document.getElementById('cronField');
+  const eventField = document.getElementById('eventField');
+  const eventBtn = document.getElementById('eventTriggerBtn');
+  if (cronField) cronField.style.display = isEvent ? 'none' : 'grid';
+  if (eventField) eventField.style.display = isEvent ? 'grid' : 'none';
+  if (eventBtn) eventBtn.style.display = isEvent ? 'inline-flex' : 'none';
+}
+
+async function loadJobs() {
+  const data = await getJson(`${API_BASE}/jobs?limit=100`);
+  APP.jobs = data.items || [];
+  renderJobList();
+}
+
+async function selectJob(jobId) {
+  APP.selectedJobId = jobId;
+  const data = await getJson(`${API_BASE}/jobs/${encodeURIComponent(jobId)}`);
+  const incoming = data.item;
+  const index = APP.jobs.findIndex((job) => job.job_id === jobId);
+  if (index >= 0) APP.jobs[index] = incoming;
+  renderJobList();
+}
+
+async function saveSchedule(jobId) {
+  if (!CAN_MANAGE_SCHEDULES) return;
+  const payload = {
+    trigger_type: document.getElementById('triggerType').value,
+    enabled: document.getElementById('scheduleEnabled').value === 'true',
+    description: document.getElementById('scheduleDescription').value.trim() || null,
+    timezone: document.getElementById('scheduleTimezone').value.trim() || 'Asia/Calcutta',
+    cron_expression: document.getElementById('cronExpression').value.trim() || null,
+    start_at: document.getElementById('scheduleStartAt').value || null,
+    event_name: document.getElementById('eventName').value.trim() || null
+  };
+  const result = await getJson(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/schedule`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  document.getElementById('scheduleState').textContent = result.message || 'Schedule saved.';
+  await selectJob(jobId);
+}
+
+async function recordEventTrigger(jobId) {
+  if (!CAN_MANAGE_SCHEDULES) return;
+  const eventNameInput = document.getElementById('eventName');
+  const eventName = eventNameInput ? eventNameInput.value.trim() : '';
+  const url = `${API_BASE}/jobs/${encodeURIComponent(jobId)}/event-trigger${eventName ? `?event_name=${encodeURIComponent(eventName)}` : ''}`;
+  const result = await getJson(url, { method: 'POST' });
+  document.getElementById('scheduleState').textContent = result.message || 'Event trigger recorded.';
+  await selectJob(jobId);
+}
+
+async function rerunJob(jobId) {
+  if (!DBM_RBAC.hasPermission('operateMigrations')) return;
+  const result = await getJson(`${API_BASE}/jobs/${encodeURIComponent(jobId)}/rerun`, { method: 'POST' });
+  document.getElementById('scheduleState').textContent = result.message || 'Job rerun started.';
+  window.setTimeout(() => loadJobs().catch(() => {}), 1500);
+}
+
+function exportJobs(format) {
+  const items = APP.filtered || [];
+  if (!items.length) return;
+  let content = '';
+  let mime = 'application/json';
+  let extension = 'json';
+  if (format === 'csv') {
+    mime = 'text/csv';
+    extension = 'csv';
+    const rows = [['job_id', 'job_name', 'status', 'source_db', 'target_db', 'task_count', 'successful_tasks', 'failed_tasks', 'skipped_tasks', 'trigger_type', 'cron_expression', 'event_name', 'last_run_id', 'last_run_status', 'next_run_at']];
+    items.forEach((job) => {
+      rows.push([
+        job.job_id,
+        job.job_name,
+        job.status,
+        job.source_db,
+        job.target_db,
+        job.task_count,
+        job.successful_tasks,
+        job.failed_tasks,
+        job.skipped_tasks,
+        job.schedule?.trigger_type || '',
+        job.schedule?.cron_expression || '',
+        job.schedule?.event_name || '',
+        job.schedule?.last_run_id || '',
+        job.schedule?.last_run_status || '',
+        job.schedule?.next_run_at || ''
+      ]);
+    });
+    content = rows.map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  } else {
+    content = JSON.stringify(items, null, 2);
+  }
+  const blob = new Blob([content], { type: mime });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `jobs-schedule-${Date.now()}.${extension}`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+initTheme();
+loadJobs().catch((error) => {
+  document.getElementById('jobList').innerHTML = `<div class="empty">${escHtml(error.message)}</div>`;
+});
+</script>
+</body>
+</html>

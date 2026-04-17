@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connections | Database Migrator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root { --bg:#f5f7fb; --surface:#ffffff; --surface2:#f8fafc; --border:#d9e2ec; --blue:#1f73c9; --green:#1f9d55; --red:#d14343; --text:#152238; --muted:#4c5d73; --dim:#73839a; --display:'Sora', sans-serif; --body:'Manrope', sans-serif; --mono:Consolas, 'Courier New', monospace; --shadow:0 14px 36px rgba(15,23,42,.08); }
+* { box-sizing:border-box; }
+body { margin:0; font-family:var(--body); color:var(--text); background:linear-gradient(180deg, #fbfcfe, var(--bg)); }
+body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:1; background:linear-gradient(rgba(15,23,42,.03) 1px, transparent 1px),linear-gradient(90deg, rgba(15,23,42,.03) 1px, transparent 1px); background-size:56px 56px; mask-image:linear-gradient(to bottom, rgba(0,0,0,.3), transparent 78%); }
+.topbar { position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--border); background:rgba(255,255,255,.92); backdrop-filter:blur(16px); }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:14px; border:1px solid #ffd4c9; background:#fff7f4; color:#ef5b3f; }
+.brand-name { font-family:var(--display); font-size:1.05rem; font-weight:700; letter-spacing:-.03em; }
+.brand-name span { color:var(--blue); }
+.topbar-actions,.btn-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.btn { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:10px; padding:11px 16px; background:#fff; color:var(--text); text-decoration:none; cursor:pointer; font:600 .94rem var(--body); }
+.btn-primary { background:var(--blue); color:#fff; border-color:var(--blue); }
+.btn-danger { color:var(--red); }
+.theme-select { min-width:110px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--text); font:600 .92rem var(--body); }
+.page { position:relative; z-index:1; max-width:1320px; margin:0 auto; padding:34px 24px 64px; }
+.hero { margin-bottom:24px; padding:30px 36px; border:1px solid var(--border); border-radius:18px; background:#fff; box-shadow:var(--shadow); }
+.hero-kicker { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid #d6e7f8; border-radius:999px; background:#f1f7fd; color:var(--blue); font:700 .74rem var(--mono); letter-spacing:.16em; text-transform:uppercase; }
+.hero h1 { margin:14px 0 0; font-family:var(--display); font-size:clamp(2.4rem, 4vw, 3.8rem); line-height:1; letter-spacing:-.05em; }
+.hero p { margin:14px 0 0; color:var(--dim); max-width:760px; line-height:1.7; }
+.layout { display:grid; grid-template-columns:minmax(0, 1fr) 400px; gap:22px; }
+.card { background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); }
+.card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:20px 22px; border-bottom:1px solid var(--border); }
+.card-title { font-family:var(--display); font-size:1.05rem; font-weight:700; }
+.card-sub { display:none; margin-top:4px; color:var(--dim); font-size:.82rem; }
+.card-body { padding:20px 22px; }
+.form-group { margin-bottom:14px; }
+.form-row { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+label { display:block; margin-bottom:8px; color:var(--muted); font-size:.84rem; }
+.input,select { width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; background:var(--surface2); color:var(--text); font:inherit; outline:none; }
+.input:focus,select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(31,115,201,.12); }
+.field-help,.empty,.detail-code { color:var(--dim); font-size:.78rem; line-height:1.55; }
+.field-help,.detail-code,.empty { font-family:var(--mono); }
+.connection-list { display:grid; gap:12px; }
+.connection-item { width:100%; text-align:left; padding:14px; border:1px solid var(--border); border-radius:14px; background:#fff; cursor:pointer; }
+.connection-item.active { border-color:#b8d5f2; box-shadow:inset 0 0 0 1px rgba(31,115,201,.14); background:#fbfdff; }
+.connection-name { font-weight:700; }
+.connection-meta { margin-top:6px; color:var(--dim); font:700 .75rem var(--mono); }
+.connection-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.connection-panel { display:none; margin-top:16px; }
+.detail-box { padding:14px; border:1px solid var(--border); border-radius:14px; background:#fbfdff; }
+.status { display:inline-flex; align-items:center; gap:6px; padding:7px 11px; border-radius:999px; border:1px solid #b8d5f2; background:#eef6fe; color:#0f4f8c; font:700 .72rem var(--mono); text-transform:uppercase; letter-spacing:.08em; }
+.status.testing { border-color:#f3d08c; background:#fff7e6; color:#8a5a00; }
+.status.success { border-color:#8fd3b0; background:#e8f7ee; color:#0f5132; }
+.status.error { border-color:#f0aeb5; background:#fdebec; color:#842029; }
+.msg { margin-top:12px; padding:11px 12px; border:1px solid transparent; border-radius:10px; font:700 .78rem var(--mono); display:none; }
+.msg.ok { color:#0f5132; background:#e8f7ee; border-color:#8fd3b0; }
+.msg.err { color:#842029; background:#fdebec; border-color:#f0aeb5; }
+:root[data-theme="dark"] body { background:linear-gradient(180deg, #09111f, #0b1220); color:#e5e7eb; }
+:root[data-theme="dark"] body::before { background:linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px),linear-gradient(90deg, rgba(148,163,184,.045) 1px, transparent 1px); }
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .hero,
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .connection-item,
+:root[data-theme="dark"] .detail-box { background:#111a2b; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] .btn,
+:root[data-theme="dark"] .theme-select,
+:root[data-theme="dark"] .input,
+:root[data-theme="dark"] select { background:#162338; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] option { background:#162338; color:#e5e7eb; }
+:root[data-theme="dark"] .hero-kicker { background:#122033; border-color:#334764; color:#93c5fd; }
+:root[data-theme="dark"] .hero p,
+:root[data-theme="dark"] .card-sub,
+:root[data-theme="dark"] .field-help,
+:root[data-theme="dark"] .empty,
+:root[data-theme="dark"] .connection-meta,
+:root[data-theme="dark"] .detail-code,
+:root[data-theme="dark"] label { color:#94a3b8; }
+:root[data-theme="dark"] .brand-icon { background:#1c2436; border-color:#3b4b68; color:#60a5fa; }
+:root[data-theme="dark"] .status { background:#1a2740; border-color:#3b4b68; color:#cbd5e1; }
+:root[data-theme="dark"] .status.success { background:#0f1f18; border-color:#226b45; color:#86efac; }
+:root[data-theme="dark"] .status.error { background:#2a1518; border-color:#7f3038; color:#fca5a5; }
+:root[data-theme="dark"] .status.testing { background:#2d2410; border-color:#7a5d18; color:#fde68a; }
+@media (max-width:980px) { .layout,.form-row { grid-template-columns:1fr; } .topbar { flex-direction:column; align-items:flex-start; } }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-database"></i></div>
+      <div class="brand-name">Database <span>Migrator</span></div>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn" href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+      <a class="btn" href="database-migrator-dark.html"><i class="fa-solid fa-wand-magic-sparkles"></i> Migrator</a>
+      <button class="btn" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <section class="hero">
+      <div class="hero-kicker"><i class="fa-solid fa-plug-circle-plus"></i> Connection Registry</div>
+      <h1>Manage reusable database connections</h1>
+      <p>Create and maintain named connection profiles once, then select them from source and target dropdowns on the migration page. The migration workflow, metadata loading, and object selection remain unchanged.</p>
+    </section>
+
+    <section class="layout">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title" title="Create or update saved connection profiles for all configured database engines.">Connection Editor</div>
+            <div class="card-sub">Create or update saved connection profiles for all configured database engines.</div>
+          </div>
+          <div class="status" id="editorStatus"><i class="fa-solid fa-circle"></i> New Profile</div>
+        </div>
+        <div class="card-body">
+          <form id="connectionForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="connectionName">Connection Name</label>
+                <input class="input" id="connectionName" placeholder="e.g. Snowflake QA" title="Enter a reusable name for this saved connection profile.">
+              </div>
+              <div class="form-group">
+                <label for="connectionEngine">Database Engine</label>
+                <select id="connectionEngine" onchange="renderConnectionFields()" title="Choose the database engine for this saved connection.">
+                  <option value="">-- Select engine --</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="connectionDynFields"></div>
+
+            <div class="btn-row">
+              <button class="btn" type="button" id="testConnectionBtn" onclick="testConnectionProfile()" title="Validate the current form values against the backend connection test endpoint."><i class="fa-solid fa-plug-circle-bolt"></i> Test Connection</button>
+              <button class="btn btn-primary" type="submit" id="saveConnectionBtn" title="Save this connection profile for reuse on the migration page."><i class="fa-regular fa-floppy-disk"></i> Save Connection</button>
+              <button class="btn" type="button" onclick="resetConnectionForm()" title="Clear the editor and return to new-profile mode."><i class="fa-solid fa-rotate-left"></i> Reset</button>
+            </div>
+
+            <div class="msg ok" id="connectionOkMsg">Connection saved.</div>
+            <div class="msg err" id="connectionErrMsg">Unable to save connection.</div>
+          </form>
+        </div>
+      </div>
+
+      <aside class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title" title="Profiles stored locally on this browser.">Saved Connections</div>
+            <div class="card-sub">Profiles stored locally on this browser.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="connectionFilterEngine">Filter by Engine</label>
+            <select id="connectionFilterEngine" onchange="renderConnectionList()" title="Filter the saved connection list by database engine.">
+              <option value="">All Engines</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button class="btn" type="button" id="existingConnectionsBtn" onclick="toggleExistingConnections()" title="Open or close the saved connection list.">
+              <i class="fa-solid fa-link"></i> Existing Connections
+            </button>
+          </div>
+          <div class="connection-panel" id="connectionPanel">
+            <div class="connection-list" id="connectionList"><div class="empty">No saved connections yet.</div></div>
+          </div>
+          <div class="detail-box" id="selectedConnectionBox" style="margin-top:16px; display:none">
+            <div class="card-title" style="font-size:.92rem; margin-bottom:10px">Selected Connection</div>
+            <div class="detail-code" id="connectionDetail">Choose a saved connection to manage it here.</div>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+<script src="rbac.js"></script>
+<script>
+'use strict';
+const THEME_KEY = 'dbm_theme';
+
+const SESSION_INFO = DBM_RBAC.getSession();
+if (!SESSION_INFO.isAuthenticated) {
+  window.location.replace('login.html');
+} else if (!DBM_RBAC.canAccessPage('connections', SESSION_INFO.role)) {
+  window.location.replace('home.html');
+}
+
+function resolveTheme(pref) {
+  if (pref === 'light' || pref === 'dark') return pref;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function changeTheme(pref) {
+  localStorage.setItem(THEME_KEY, pref);
+  document.documentElement.dataset.theme = resolveTheme(pref);
+}
+
+function initTheme() {
+  const pref = localStorage.getItem(THEME_KEY) || 'auto';
+  const select = document.getElementById('themeSelect');
+  if (select) select.value = pref;
+  document.documentElement.dataset.theme = resolveTheme(pref);
+}
+
+const CONNECTION_PROFILE_KEY = 'dbm_connection_profiles';
+const API_BASE = 'http://127.0.0.1:8000/api';
+const DB_SCHEMAS = {
+  sqlserver: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'e.g. 192.168.1.10' },
+    { id: 'port', label: 'Port', type: 'number', ph: '1433', def: '1433' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'sa' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  mysql: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'localhost' },
+    { id: 'port', label: 'Port', type: 'number', ph: '3306', def: '3306' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'root' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  snowflake: [
+    { id: 'account', label: 'Account / Host', type: 'text', ph: 'xy12345.eu-north-1.aws' },
+    { id: 'warehouse', label: 'Warehouse', type: 'text', ph: 'COMPUTE_WH' },
+    { id: 'role', label: 'Role', type: 'text', ph: 'SYSADMIN' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'my_user' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  postgresql: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'localhost' },
+    { id: 'port', label: 'Port', type: 'number', ph: '5432', def: '5432' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'postgres' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  oracle: [
+    { id: 'host', label: 'Host / TNS', type: 'text', ph: 'oracle-host or ORCL' },
+    { id: 'port', label: 'Port', type: 'number', ph: '1521', def: '1521' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'system' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  mongodb: [{ id: 'uri', label: 'Connection URI', type: 'text', ph: 'mongodb+srv://user:pass@cluster.mongodb.net' }],
+  redshift: [
+    { id: 'host', label: 'Cluster Endpoint', type: 'text', ph: 'cluster.region.redshift.amazonaws.com' },
+    { id: 'port', label: 'Port', type: 'number', ph: '5439', def: '5439' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'awsuser' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  azuresql: [
+    { id: 'host', label: 'Server Name', type: 'text', ph: 'server.database.windows.net' },
+    { id: 'port', label: 'Port', type: 'number', ph: '1433', def: '1433' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'sqladmin@server' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  gcloudsql: [
+    { id: 'host', label: 'Connection Name / IP', type: 'text', ph: 'project:region:instance' },
+    { id: 'port', label: 'Port', type: 'number', ph: '5432', def: '5432' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'postgres' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  teradata: [
+    { id: 'host', label: 'Teradata Server', type: 'text', ph: 'tdserver.example.com' },
+    { id: 'port', label: 'Port', type: 'number', ph: '1025', def: '1025' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'dbc' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ],
+  db2: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'db2-host.example.com' },
+    { id: 'port', label: 'Port', type: 'number', ph: '50000', def: '50000' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'db2admin' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********' }
+  ]
+};
+const DB_LABELS = {
+  sqlserver: 'SQL Server', mysql: 'MySQL', oracle: 'Oracle', snowflake: 'Snowflake',
+  postgresql: 'PostgreSQL', mongodb: 'MongoDB', redshift: 'Amazon Redshift',
+  azuresql: 'Azure SQL', gcloudsql: 'Google Cloud SQL', teradata: 'Teradata', db2: 'DB2'
+};
+const API_DB_TYPES = {
+  sqlserver: 'SQL Server',
+  azuresql: 'Azure SQL',
+  mysql: 'MySQL',
+  postgresql: 'PostgreSQL',
+  redshift: 'Amazon Redshift',
+  gcloudsql: 'Google Cloud SQL',
+  snowflake: 'Snowflake'
+};
+
+const APP = { selectedConnectionId: '', editingConnectionId: '', connectionsPanelOpen: false };
+
+function escHtml(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function getConnectionProfiles() {
+  try {
+    return JSON.parse(localStorage.getItem(CONNECTION_PROFILE_KEY) || '[]');
+  } catch (_) {
+    return [];
+  }
+}
+
+function setConnectionProfiles(items) {
+  localStorage.setItem(CONNECTION_PROFILE_KEY, JSON.stringify(items));
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {}
+  if (!response.ok) throw new Error(data?.detail ? JSON.stringify(data.detail) : `HTTP ${response.status}`);
+  return data;
+}
+
+function setEditorStatus(mode, label) {
+  const status = document.getElementById('editorStatus');
+  status.className = `status${mode ? ` ${mode}` : ''}`;
+  status.innerHTML = `<i class="fa-solid fa-circle"></i> ${escHtml(label)}`;
+}
+
+function renderEngineOptions() {
+  const options = Object.entries(DB_LABELS).map(([key, label]) => `<option value="${escHtml(key)}">${escHtml(label)}</option>`).join('');
+  document.getElementById('connectionEngine').innerHTML = '<option value="">-- Select engine --</option>' + options;
+  document.getElementById('connectionFilterEngine').innerHTML = '<option value="">All Engines</option>' + options;
+}
+
+function renderConnectionFields() {
+  const engine = document.getElementById('connectionEngine').value;
+  const host = document.getElementById('connectionDynFields');
+  const fields = DB_SCHEMAS[engine] || [];
+  host.innerHTML = fields.map((field) => `
+    <div class="form-group">
+      <label for="conn_${field.id}">${escHtml(field.label)}</label>
+      <input class="input" id="conn_${escHtml(field.id)}" type="${escHtml(field.type)}" placeholder="${escHtml(field.ph || '')}" value="${escHtml(field.def || '')}">
+    </div>
+  `).join('');
+}
+
+function collectConnectionDetails(engine) {
+  const details = {};
+  (DB_SCHEMAS[engine] || []).forEach((field) => {
+    const value = document.getElementById(`conn_${field.id}`)?.value.trim() || '';
+    if (value) details[field.id] = value;
+  });
+  return details;
+}
+
+function toggleExistingConnections() {
+  const panel = document.getElementById('connectionPanel');
+  const button = document.getElementById('existingConnectionsBtn');
+  if (!panel) return;
+  APP.connectionsPanelOpen = !APP.connectionsPanelOpen;
+  panel.style.display = APP.connectionsPanelOpen ? 'block' : 'none';
+  if (button) {
+    button.innerHTML = APP.connectionsPanelOpen
+      ? '<i class="fa-solid fa-link-slash"></i> Close Existing Connections'
+      : '<i class="fa-solid fa-link"></i> Existing Connections';
+  }
+}
+
+function updateSelectedConnectionBox() {
+  const box = document.getElementById('selectedConnectionBox');
+  const detail = document.getElementById('connectionDetail');
+  if (!box || !detail) return;
+  const profile = getConnectionProfiles().find((item) => item.id === APP.selectedConnectionId) || null;
+  box.style.display = profile ? 'block' : 'none';
+  detail.textContent = profile ? formatConnectionDetail(profile) : 'Choose a saved connection to manage it here.';
+}
+
+function renderConnectionList() {
+  const filterEngine = document.getElementById('connectionFilterEngine').value;
+  const list = document.getElementById('connectionList');
+  const profiles = getConnectionProfiles().filter((item) => !filterEngine || item.engine === filterEngine);
+  const toggleBtn = document.getElementById('existingConnectionsBtn');
+  if (toggleBtn) toggleBtn.disabled = !profiles.length;
+  const panel = document.getElementById('connectionPanel');
+  if (panel) panel.style.display = APP.connectionsPanelOpen && profiles.length ? 'block' : 'none';
+  if (APP.selectedConnectionId && !profiles.some((item) => item.id === APP.selectedConnectionId)) {
+    APP.selectedConnectionId = '';
+    updateSelectedConnectionBox();
+  }
+  if (!profiles.length) {
+    APP.connectionsPanelOpen = false;
+    if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-link"></i> Existing Connections';
+    list.innerHTML = '<div class="empty">No saved connections yet.</div>';
+    updateSelectedConnectionBox();
+    return;
+  }
+  list.innerHTML = profiles.map((profile) => `
+    <div class="connection-item${APP.selectedConnectionId === profile.id ? ' active' : ''}" role="button" tabindex="0" onclick="selectConnection('${escHtml(profile.id)}')">
+      <div class="connection-name">${escHtml(profile.name)}</div>
+      <div class="connection-meta">${escHtml(DB_LABELS[profile.engine] || profile.engine)}</div>
+      ${APP.selectedConnectionId === profile.id ? `
+        <div class="connection-actions">
+          <button class="btn" type="button" onclick="editSelectedConnectionFromRow(event)"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="btn btn-danger" type="button" onclick="deleteSelectedConnectionFromRow(event)"><i class="fa-regular fa-trash-can"></i> Delete</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function formatConnectionDetail(profile) {
+  if (!profile) return 'Choose a saved connection to manage it here.';
+  const lines = [
+    `Name: ${profile.name}`,
+    `Engine: ${DB_LABELS[profile.engine] || profile.engine}`
+  ];
+  return lines.join('\n');
+}
+
+function selectConnection(id) {
+  APP.selectedConnectionId = id;
+  updateSelectedConnectionBox();
+  renderConnectionList();
+}
+
+function loadSelectedConnection() {
+  const profile = getConnectionProfiles().find((item) => item.id === APP.selectedConnectionId);
+  if (!profile) return;
+  APP.editingConnectionId = profile.id;
+  document.getElementById('connectionName').value = profile.name;
+  document.getElementById('connectionEngine').value = profile.engine;
+  renderConnectionFields();
+  Object.entries(profile.details || {}).forEach(([key, value]) => {
+    const input = document.getElementById(`conn_${key}`);
+    if (input) input.value = value;
+  });
+  document.getElementById('saveConnectionBtn').innerHTML = '<i class="fa-regular fa-floppy-disk"></i> Update Connection';
+  setEditorStatus('', 'Editing Profile');
+}
+
+function editSelectedConnectionFromRow(event) {
+  event.stopPropagation();
+  loadSelectedConnection();
+}
+
+function deleteSelectedConnectionFromRow(event) {
+  event.stopPropagation();
+  deleteSelectedConnection();
+}
+
+function deleteSelectedConnection() {
+  const profile = getConnectionProfiles().find((item) => item.id === APP.selectedConnectionId);
+  if (!profile) return;
+  if (!window.confirm(`Delete saved connection "${profile.name}"?`)) return;
+  setConnectionProfiles(getConnectionProfiles().filter((item) => item.id !== profile.id));
+  if (APP.editingConnectionId === profile.id) resetConnectionForm();
+  APP.selectedConnectionId = '';
+  updateSelectedConnectionBox();
+  renderConnectionList();
+}
+
+function resetConnectionForm() {
+  APP.editingConnectionId = '';
+  document.getElementById('connectionForm').reset();
+  document.getElementById('connectionDynFields').innerHTML = '';
+  document.getElementById('saveConnectionBtn').innerHTML = '<i class="fa-regular fa-floppy-disk"></i> Save Connection';
+  setEditorStatus('', 'New Profile');
+  document.getElementById('connectionOkMsg').style.display = 'none';
+  document.getElementById('connectionErrMsg').style.display = 'none';
+}
+
+function logout() {
+  DBM_RBAC.logout();
+  window.location.replace('login.html');
+}
+
+async function testConnectionProfile() {
+  const okMsg = document.getElementById('connectionOkMsg');
+  const errMsg = document.getElementById('connectionErrMsg');
+  okMsg.style.display = 'none';
+  errMsg.style.display = 'none';
+
+  const engine = document.getElementById('connectionEngine').value;
+  const details = collectConnectionDetails(engine);
+  if (!engine) {
+    errMsg.textContent = 'Select a database engine before testing the connection.';
+    errMsg.style.display = 'block';
+    setEditorStatus('error', 'Engine Required');
+    return;
+  }
+  if (!API_DB_TYPES[engine]) {
+    errMsg.textContent = 'This engine is not wired in the backend for connection testing yet.';
+    errMsg.style.display = 'block';
+    setEditorStatus('error', 'Not Supported');
+    return;
+  }
+  if (!Object.keys(details).length) {
+    errMsg.textContent = 'Enter the connection details before testing.';
+    errMsg.style.display = 'block';
+    setEditorStatus('error', 'Details Required');
+    return;
+  }
+
+  const btn = document.getElementById('testConnectionBtn');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing...';
+  setEditorStatus('testing', 'Testing Connection');
+  try {
+    const result = await postJson(`${API_BASE}/test-connection`, {
+      database_type: API_DB_TYPES[engine],
+      connection_details: details
+    });
+    if (result.status !== 'success') throw new Error(result.message || 'Connection test failed.');
+    okMsg.textContent = `${DB_LABELS[engine] || engine} connection successful.`;
+    okMsg.style.display = 'block';
+    setEditorStatus('success', 'Connection OK');
+  } catch (error) {
+    errMsg.textContent = error.message;
+    errMsg.style.display = 'block';
+    setEditorStatus('error', 'Connection Failed');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+document.getElementById('connectionForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const okMsg = document.getElementById('connectionOkMsg');
+  const errMsg = document.getElementById('connectionErrMsg');
+  okMsg.style.display = 'none';
+  errMsg.style.display = 'none';
+
+  const name = document.getElementById('connectionName').value.trim();
+  const engine = document.getElementById('connectionEngine').value;
+  if (!name || !engine) {
+    errMsg.textContent = 'Connection name and engine are required.';
+    errMsg.style.display = 'block';
+    return;
+  }
+
+  const details = collectConnectionDetails(engine);
+  if (!Object.keys(details).length) {
+    errMsg.textContent = 'Enter connection details before saving.';
+    errMsg.style.display = 'block';
+    return;
+  }
+
+  const profiles = getConnectionProfiles();
+  let successMessage = 'Connection saved successfully.';
+  if (APP.editingConnectionId) {
+    const index = profiles.findIndex((item) => item.id === APP.editingConnectionId);
+    if (index >= 0) {
+      profiles[index] = { ...profiles[index], name, engine, details };
+    }
+    successMessage = 'Connection updated successfully.';
+  } else {
+    profiles.push({ id: `conn_${Date.now()}`, name, engine, details });
+  }
+
+  setConnectionProfiles(profiles);
+  renderConnectionList();
+  resetConnectionForm();
+  okMsg.textContent = successMessage;
+  okMsg.style.display = 'block';
+});
+
+renderEngineOptions();
+renderConnectionList();
+initTheme();
+</script>
+</body>
+</html>

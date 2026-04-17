@@ -1,0 +1,27 @@
+{
+  "target_rules": [
+    "Use MySQL-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit SQL Server-only brackets, batch separators, or session settings."
+  ],
+  "unsupported_object_types": {
+    "table": "SQL Server table extraction is not implemented in this tool yet. Skip table migration from SQL Server or add deterministic extraction support first.",
+    "sequence": "MySQL does not support SQL Server-style standalone sequence migration directly in this tool.",
+    "synonym": "MySQL does not support synonym objects. Convert manually to views or application-level indirection.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for MySQL in this tool."
+  },
+  "object_rules": {
+    "view": [
+      "Convert SQL Server view syntax to valid MySQL view syntax."
+    ],
+    "storedprocedure": [
+      "Convert SQL Server procedure syntax to one valid MySQL CREATE PROCEDURE statement without DELIMITER directives."
+    ],
+    "function": [
+      "Convert SQL Server function syntax to one valid MySQL CREATE FUNCTION statement."
+    ],
+    "trigger": [
+      "Convert SQL Server trigger syntax to one valid MySQL CREATE TRIGGER statement."
+    ]
+  }
+}

@@ -1,0 +1,2722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Object Migrator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root { --bg:#f5f7fb; --bg2:#eef2f7; --surface:#ffffff; --surface2:#f8fafc; --surface3:#edf3fb; --border:#d9e2ec; --blue:#1f73c9; --blue-soft:#1f73c9; --teal:#1c8b7d; --text:#152238; --muted:#4c5d73; --dim:#73839a; --ok:#1f9d55; --err:#d14343; --warn:#d98f1d; --display:'Sora', sans-serif; --body:'Manrope', sans-serif; --mono:Consolas, 'Courier New', monospace; --shadow:0 14px 36px rgba(15,23,42,.08); }
+* { box-sizing:border-box; }
+body { margin:0; position:relative; overflow-x:hidden; font-family:var(--body); color:var(--text); background:linear-gradient(180deg, #fbfcfe, var(--bg)); }
+body::before,body::after { content:""; position:fixed; inset:0; pointer-events:none; }
+body::before { opacity:1; background:linear-gradient(rgba(15,23,42,.03) 1px, transparent 1px),linear-gradient(90deg, rgba(15,23,42,.03) 1px, transparent 1px); background-size:56px 56px; mask-image:linear-gradient(to bottom, rgba(0,0,0,.3), transparent 78%); }
+body::after { opacity:1; background:radial-gradient(circle at 15% 14%, rgba(31,115,201,.08), transparent 0 18%),radial-gradient(circle at 84% 22%, rgba(31,115,201,.05), transparent 0 14%),radial-gradient(circle at 70% 88%, rgba(31,115,201,.04), transparent 0 13%); }
+.topbar { position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; padding:18px 30px; border-bottom:1px solid var(--border); background:rgba(255,255,255,.92); backdrop-filter:blur(16px); }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:14px; border:1px solid #ffd4c9; background:#fff7f4; color:#ef5b3f; box-shadow:none; }
+.brand-name { font-family:var(--display); font-size:1.05rem; font-weight:700; letter-spacing:-.03em; }
+.brand-name span { color:var(--blue-soft); }
+.topbar-actions { display:flex; align-items:center; gap:10px; }
+.theme-select { min-width:110px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--text); font:600 .92rem var(--body); }
+.nav-btn,.badge,.pill { padding:8px 12px; border-radius:999px; border:1px solid var(--border); background:#fff; color:var(--muted); font-size:.78rem; box-shadow:none; }
+.nav-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.nav-btn:hover {
+  border-color: rgba(96,165,250,.32);
+  color: var(--blue-soft);
+}
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: none;
+}
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #c056a1;
+  color: #fff;
+  font-family: var(--display);
+  font-weight: 800;
+}
+.user-meta {
+  line-height: 1.1;
+}
+.user-name {
+  font-size: .78rem;
+  color: var(--text);
+}
+.user-role {
+  font-size: .68rem;
+  color: var(--dim);
+  font-family: var(--mono);
+}
+.user-menu {
+  position: relative;
+}
+.user-menu-toggle {
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.user-menu-toggle:hover {
+  border-color: rgba(96,165,250,.32);
+}
+.user-menu-toggle i:last-child {
+  color: var(--dim);
+  margin-left: 2px;
+}
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 220px;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: var(--shadow);
+  display: none;
+  z-index: 40;
+}
+.user-dropdown.open {
+  display: block;
+}
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.menu-item:hover {
+  background: rgba(37,99,235,.08);
+}
+.pill.connected { color:#0f5132; border-color:#8fd3b0; background:linear-gradient(180deg, #e8f7ee, #dff3e8); font-weight:700; }
+.pill.failed { color:#842029; border-color:#f0aeb5; background:linear-gradient(180deg, #fdebec, #f9dfe1); font-weight:700; }
+.page { position:relative; z-index:1; max-width:1320px; margin:0 auto; padding:34px 24px 64px; }
+.hero { position:relative; margin-bottom:28px; padding:30px 36px; border:1px solid var(--border); border-radius:18px; background:#fff; box-shadow:var(--shadow); overflow:hidden; }
+.hero::after { content:""; position:absolute; inset:auto -10% -28% auto; width:380px; height:380px; border-radius:50%; background:radial-gradient(circle, rgba(31,115,201,.06), transparent 70%); pointer-events:none; }
+.hero h1 { margin:10px 0 0; font-family:var(--display); font-size:clamp(2.8rem, 5vw, 4.4rem); line-height:1; letter-spacing:-.06em; }
+.hero h1 span { color:var(--blue-soft); }
+.hero p { margin:14px 0 0; color:var(--dim); max-width:720px; font-size:1rem; line-height:1.7; }
+.hero-kicker { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; border:1px solid #d6e7f8; background:#f1f7fd; color:var(--blue-soft); font:700 .74rem var(--mono); letter-spacing:.16em; text-transform:uppercase; }
+.grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:22px; }
+.card,.console,.action,.history-shell,.history-detail,.run-snapshot { background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); }
+.card { padding:24px; }
+.card-head,.console-head,.action { display:flex; justify-content:space-between; align-items:center; gap:14px; }
+.card-head { margin-bottom:18px; }
+.card-head-left { display:flex; gap:14px; align-items:center; }
+.card-icon { width:46px; height:46px; display:grid; place-items:center; border-radius:12px; border:1px solid #d6e7f8; background:#f4f9ff; color:var(--blue-soft); }
+.card.target .card-icon { border-color:#f5e1bb; background:#fff8ee; color:var(--warn); }
+.card-title,.console-title { font-family:var(--display); font-weight:800; }
+.card-title { font-size:1.12rem; letter-spacing:-.03em; }
+.card-sub,.console-sub { color:var(--dim); font-size:.8rem; }
+.section-label { margin:18px 0 10px; color:var(--dim); text-transform:uppercase; letter-spacing:.14em; font-size:.72rem; }
+.form-group { margin-bottom:14px; }
+.form-row { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+.inline-field { display:flex; align-items:end; gap:10px; }
+.inline-field .form-group { flex:1; margin-bottom:0; }
+.icon-btn { width:46px; height:46px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; }
+.icon-btn:disabled { opacity:.55; cursor:not-allowed; }
+label { display:block; margin-bottom:8px; color:var(--muted); font-size:.84rem; }
+.req { color:var(--blue-soft); }
+.opt { color:var(--dim); font-size:.72rem; }
+.input,select { width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font:inherit; outline:none; }
+.input,select,.field-help,.field-err,.pill,.badge,.section-label,.user-name { font-family:var(--mono); }
+.input:focus,select:focus { border-color:var(--blue-soft); box-shadow:0 0 0 3px rgba(37,99,235,.18); }
+.input.invalid,select.invalid { border-color:var(--err); }
+.field-err { display:none; margin-top:6px; color:var(--err); font-size:.73rem; }
+.field-help { display:none; margin-top:6px; color:var(--dim); font-size:.73rem; line-height:1.45; }
+.pw-wrap { position:relative; }
+.pw-eye { position:absolute; top:50%; right:10px; transform:translateY(-50%); border:0; background:transparent; color:var(--dim); cursor:pointer; }
+.check { padding:14px; border-radius:12px; border:1px solid var(--border); background:#fbfdff; }
+.check small { display:none; margin-top:4px; color:var(--dim); }
+.object-type-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+.object-check { display:flex; align-items:flex-start; gap:10px; padding:12px; border-radius:12px; border:1px solid var(--border); background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.025)); color:var(--text); }
+.object-check:not(.disabled):has(input:checked) { border-color: rgba(96,165,250,.38); box-shadow: inset 0 0 0 1px rgba(37,99,235,.14); }
+.object-check input { margin-top:2px; }
+.object-check.disabled { opacity:.45; }
+.object-check span { display:block; font-size:.82rem; color:var(--muted); }
+.inline-checks { display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:12px; }
+.inline-checks .check { padding:8px 12px; display:flex; align-items:center; background:#fbfdff; }
+.inline-checks .check label { margin:0; display:inline-flex; align-items:center; gap:8px; cursor:pointer; white-space:nowrap; }
+.inline-checks .check input { margin:0; }
+.btn-row,.console-actions { display:flex; gap:12px; flex-wrap:wrap; }
+.btn { border:0; border-radius:14px; padding:12px 16px; cursor:pointer; font:600 .94rem var(--body); transition:transform .18s ease, opacity .18s ease; }
+.btn:hover:not(:disabled) { transform:translateY(-1px); }
+.btn:disabled { opacity:.55; cursor:not-allowed; }
+.btn-link { display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.btn-primary { background:var(--blue); color:#fff; font-weight:700; }
+.btn-target { background:var(--teal); color:#fff; font-weight:700; }
+.btn-ghost { background:#fff; color:var(--text); border:1px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { border-color: rgba(96,165,250,.32); color: var(--blue-soft); }
+.action { margin-top:22px; padding:18px 20px; }
+.action h3 { margin:0 0 4px; font-family:var(--display); font-size:1.12rem; letter-spacing:-.03em; }
+.action p { margin:0; color:var(--dim); font-size:.83rem; }
+.run-snapshot { margin-top:22px; padding:22px; }
+.snapshot-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; }
+.snapshot-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
+.snapshot-title { font-family:var(--display); font-size:1.05rem; font-weight:800; }
+.snapshot-sub { color:var(--dim); font-size:.8rem; }
+.snapshot-kpis { display:flex; flex-wrap:wrap; gap:10px; }
+.snapshot-card { min-width:110px; padding:14px; border-radius:12px; border:1px solid var(--border); background:#fbfdff; }
+.snapshot-label,.snapshot-meta,.snapshot-code { font-family:var(--mono); }
+.snapshot-label { color:var(--dim); font-size:.7rem; text-transform:uppercase; letter-spacing:.14em; }
+.snapshot-value { margin-top:8px; font-family:var(--display); font-weight:800; font-size:1.35rem; }
+.snapshot-box { padding:16px; border-radius:14px; border:1px solid var(--border); background:#fbfdff; }
+.snapshot-meta { color:var(--dim); font-size:.75rem; margin-top:8px; }
+.snapshot-code { white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:.76rem; line-height:1.45; }
+.console { margin-top:22px; overflow:hidden; }
+.console-head { padding:16px 18px; border-bottom:1px solid var(--border); }
+.console-body { min-height:300px; max-height:520px; overflow:auto; padding:16px 18px 22px; background:#fcfdff; font-family:var(--mono); color:#223248; }
+.log-empty { color:#5f7086; }
+.log-line { margin-bottom:8px; word-break:break-word; }
+.lt,.la { color:#6f8096; margin-right:8px; }
+.ll-info { color:#23364f; }
+.ll-success { color:#0f7a3d; }
+.ll-error { color:#b42318; }
+.ll-warn { color:#9a6700; }
+.ll-dim { color:#6f8096; }
+.ll-blue { color:#1f73c9; }
+.history-grid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr); gap:22px; margin-top:22px; }
+.history-shell,.history-detail { overflow:hidden; }
+.history-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:18px 20px; border-bottom:1px solid var(--border); }
+.history-title { font-family:var(--display); font-weight:800; font-size:1.08rem; }
+.history-sub { color:var(--dim); font-size:.8rem; }
+.history-body,.history-detail-body { padding:18px 20px; }
+.history-list,.detail-table { display:grid; gap:12px; }
+.history-empty { color:var(--dim); font-family:var(--mono); }
+.history-filters { display:grid; grid-template-columns:1.2fr .8fr .8fr .9fr .9fr 1fr .9fr auto auto; gap:10px; margin:16px 0 18px; }
+.history-pagination { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:16px; }
+.history-page-info { color:var(--dim); font-family:var(--mono); font-size:.76rem; }
+.history-item { width:100%; text-align:left; padding:14px; border-radius:14px; border:1px solid var(--border); background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.04)); color:var(--text); cursor:pointer; }
+.history-item:hover { border-color:rgba(96,165,250,.32); transform:translateY(-1px); }
+.history-item.active { border-color:rgba(96,165,250,.42); box-shadow:inset 0 0 0 1px rgba(37,99,235,.16); }
+.history-item-top,.history-item-bottom,.history-metrics,.detail-stats,.detail-chip-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.history-item-top,.history-item-bottom { justify-content:space-between; }
+.history-item-top { margin-bottom:10px; }
+.history-run-id,.history-meta,.history-object-line,.history-log-box,.detail-code,.detail-row { font-family:var(--mono); }
+.history-run-id { color:var(--text); font-size:.78rem; }
+.history-status,.detail-status { padding:6px 10px; border-radius:999px; border:1px solid var(--border); font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; }
+.status-success { color:var(--ok); border-color:rgba(53,208,127,.35); background:rgba(53,208,127,.12); }
+.status-error { color:var(--err); border-color:rgba(255,107,107,.35); background:rgba(255,107,107,.12); }
+.status-partial { color:var(--warn); border-color:rgba(244,183,64,.35); background:rgba(244,183,64,.12); }
+.status-skipped { color:var(--dim); border-color:rgba(143,163,184,.25); background:rgba(143,163,184,.08); }
+.metric-card { min-width:110px; padding:12px; border-radius:14px; border:1px solid var(--border); background:linear-gradient(180deg, rgba(9,17,31,.86), rgba(17,26,43,.95)); }
+.metric-label { color:var(--dim); font-size:.7rem; text-transform:uppercase; letter-spacing:.14em; }
+.metric-value { margin-top:8px; font-family:var(--display); font-weight:800; font-size:1.4rem; }
+.history-meta { color:var(--dim); font-size:.74rem; }
+.history-object-line { color:var(--muted); font-size:.75rem; }
+.detail-section { margin-top:18px; }
+.detail-section:first-child { margin-top:0; }
+.detail-label { margin-bottom:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.14em; font-size:.72rem; }
+.detail-kv { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+.detail-box { padding:12px; border-radius:12px; border:1px solid var(--border); background:rgba(8,12,16,.55); }
+.detail-box strong { display:block; margin-bottom:6px; color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; }
+.detail-code,.history-log-box { white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:.76rem; line-height:1.5; }
+.detail-row { display:grid; grid-template-columns:1fr auto auto auto auto; gap:10px; align-items:center; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(8,12,16,.45); font-size:.75rem; }
+.detail-chip { padding:5px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); font-family:var(--mono); font-size:.7rem; }
+.toast-wrap { position:fixed; right:20px; bottom:20px; z-index:30; display:grid; gap:10px; }
+.toast { min-width:280px; max-width:380px; display:flex; gap:12px; align-items:flex-start; padding:14px; border-radius:14px; border:1px solid var(--border); background:#ffffff; box-shadow:var(--shadow); color:var(--text); }
+.toast.success { border-color:#8fd3b0; background:#f3fbf6; }
+.toast.error { border-color:#f0aeb5; background:#fef2f3; }
+.toast.info { border-color:#b8d5f2; background:#f4f9ff; }
+.toast-title { font-weight:700; margin-bottom:4px; color:var(--text); }
+.toast-msg { color:var(--muted); font-size:.82rem; }
+.toast-close { margin-left:auto; border:0; background:transparent; color:var(--dim); cursor:pointer; }
+.modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(15,23,42,.28); backdrop-filter:blur(6px); z-index:60; }
+.modal-backdrop.open { display:flex; }
+.modal-shell { width:min(720px, 100%); background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; }
+.modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:20px 22px; border-bottom:1px solid var(--border); }
+.modal-title { font-family:var(--display); font-size:1.1rem; font-weight:700; }
+.modal-sub { margin-top:4px; color:var(--dim); font-size:.82rem; }
+.modal-body { padding:20px 22px; display:grid; gap:16px; }
+.modal-foot { display:flex; justify-content:flex-end; gap:10px; padding:18px 22px 22px; }
+.modal-box { padding:14px; border:1px solid var(--border); border-radius:12px; background:#fbfdff; }
+.modal-code { white-space:pre-wrap; word-break:break-word; color:var(--muted); font-family:var(--mono); font-size:.76rem; line-height:1.55; }
+.modal-actions { display:flex; flex-wrap:wrap; gap:10px; }
+:root[data-theme="dark"] body { background:linear-gradient(180deg, #09111f, #0b1220); color:#e5e7eb; }
+:root[data-theme="dark"] body::before { background:linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px),linear-gradient(90deg, rgba(148,163,184,.045) 1px, transparent 1px); }
+:root[data-theme="dark"] body::after { background:radial-gradient(circle at 15% 14%, rgba(96,165,250,.16), transparent 0 18%),radial-gradient(circle at 84% 22%, rgba(245,158,11,.08), transparent 0 14%),radial-gradient(circle at 70% 88%, rgba(29,78,216,.08), transparent 0 13%); }
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .hero,
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .console,
+:root[data-theme="dark"] .action,
+:root[data-theme="dark"] .run-snapshot,
+:root[data-theme="dark"] .check,
+:root[data-theme="dark"] .snapshot-card,
+:root[data-theme="dark"] .snapshot-box,
+:root[data-theme="dark"] .object-check,
+:root[data-theme="dark"] .modal-shell { background:#111a2b; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] .btn,
+:root[data-theme="dark"] .nav-btn,
+:root[data-theme="dark"] .theme-select,
+:root[data-theme="dark"] .user-chip,
+:root[data-theme="dark"] .user-dropdown,
+:root[data-theme="dark"] .input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] .icon-btn { background:#162338; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] option { background:#162338; color:#e5e7eb; }
+:root[data-theme="dark"] .console-body { background:#0f172a; color:#e5e7eb; }
+:root[data-theme="dark"] .brand-icon,
+:root[data-theme="dark"] .card-icon { background:#1c2436; border-color:#3b4b68; color:#60a5fa; }
+:root[data-theme="dark"] .card.target .card-icon { background:#2c2415; border-color:#6b5530; color:#fbbf24; }
+:root[data-theme="dark"] .hero-kicker { background:#122033; border-color:#334764; color:#93c5fd; }
+:root[data-theme="dark"] .menu-item,
+:root[data-theme="dark"] .user-name,
+:root[data-theme="dark"] .history-run-id,
+:root[data-theme="dark"] .detail-code,
+:root[data-theme="dark"] .history-log-box,
+:root[data-theme="dark"] .snapshot-code { color:#e5e7eb; }
+:root[data-theme="dark"] .menu-item:hover { background:rgba(96,165,250,.14); }
+:root[data-theme="dark"] .history-shell,
+:root[data-theme="dark"] .history-detail,
+:root[data-theme="dark"] .history-item,
+:root[data-theme="dark"] .metric-card,
+:root[data-theme="dark"] .detail-box,
+:root[data-theme="dark"] .detail-row,
+:root[data-theme="dark"] .modal-box { background:#111a2b; border-color:rgba(148,163,184,.16); color:#e5e7eb; }
+:root[data-theme="dark"] .detail-chip,
+:root[data-theme="dark"] .history-status,
+:root[data-theme="dark"] .detail-status,
+:root[data-theme="dark"] .pill,
+:root[data-theme="dark"] .badge { color:#cbd5e1; border-color:#334155; background:#162338; }
+:root[data-theme="dark"] .toast { background:#111a2b; border-color:#334155; color:#e5e7eb; }
+:root[data-theme="dark"] .toast.success { background:#0f1f18; border-color:#226b45; }
+:root[data-theme="dark"] .toast.error { background:#2a1518; border-color:#7f3038; }
+:root[data-theme="dark"] .toast.info { background:#102033; border-color:#325173; }
+:root[data-theme="dark"] .toast-title { color:#f8fafc; }
+:root[data-theme="dark"] .toast-msg,
+:root[data-theme="dark"] .toast-close,
+:root[data-theme="dark"] .history-meta,
+:root[data-theme="dark"] .history-object-line,
+:root[data-theme="dark"] .history-page-info,
+:root[data-theme="dark"] .detail-box strong,
+:root[data-theme="dark"] .detail-chip,
+:root[data-theme="dark"] .object-check span,
+:root[data-theme="dark"] .log-empty,
+:root[data-theme="dark"] .lt,
+:root[data-theme="dark"] .la,
+:root[data-theme="dark"] .ll-dim { color:#94a3b8; }
+:root[data-theme="dark"] .field-help,
+:root[data-theme="dark"] .card-sub,
+:root[data-theme="dark"] .console-sub,
+:root[data-theme="dark"] .hero p,
+:root[data-theme="dark"] label,
+:root[data-theme="dark"] .snapshot-sub,
+:root[data-theme="dark"] .snapshot-meta,
+:root[data-theme="dark"] .snapshot-label,
+:root[data-theme="dark"] .user-role,
+:root[data-theme="dark"] .section-label,
+:root[data-theme="dark"] .check small { color:#94a3b8; }
+:root[data-theme="dark"] .ll-info { color:#dbe7f5; }
+:root[data-theme="dark"] .ll-success { color:#4ade80; }
+:root[data-theme="dark"] .ll-error { color:#f87171; }
+:root[data-theme="dark"] .ll-warn { color:#fbbf24; }
+:root[data-theme="dark"] .ll-blue { color:#60a5fa; }
+.spin { display:inline-block; width:14px; height:14px; margin-right:8px; border:2px solid rgba(255,255,255,.25); border-top-color:currentColor; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@media (max-width:980px) { .grid,.form-row,.object-type-grid,.snapshot-grid,.history-grid,.detail-kv,.history-filters { grid-template-columns:1fr; } .action,.console-head,.history-head,.snapshot-head { flex-direction:column; align-items:stretch; } .detail-row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-database"></i></div>
+      <div class="brand-name">Database <span>Migrator</span></div>
+    </div>
+    <div class="topbar-actions">
+      <a class="nav-btn" href="home.html" title="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+      <a class="nav-btn" href="migration-history.html" title="Run History">
+        <i class="fa-solid fa-chart-column"></i>
+      </a>
+      <div class="user-menu">
+        <button class="user-chip user-menu-toggle" type="button" title="Current user" onclick="toggleUserMenu(event)">
+          <div class="user-avatar" id="sessionUserAvatar">RK</div>
+          <div class="user-meta">
+            <div class="user-name" id="sessionUserName">Raja Kumar</div>
+            <div class="user-role" id="sessionUserRole">Migration Admin</div>
+          </div>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+          <button class="menu-item" type="button" onclick="handleUserMenuAction('notifications')">
+            <i class="fa-regular fa-bell"></i> Notifications
+          </button>
+          <button class="menu-item" type="button" onclick="handleUserMenuAction('settings')">
+            <i class="fa-solid fa-sliders"></i> Settings
+          </button>
+          <button class="menu-item" type="button" onclick="logout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <section class="hero">
+      <div class="hero-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> Executive Command Center</div>
+      <h1>Agent-Powered <span>Migration</span></h1>
+      <p>Configure trusted source and target systems, execute schema and data movement, and monitor the run from one premium operations workspace.</p>
+    </section>
+
+    <section class="grid">
+      <div class="card source">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="card-icon"><i class="fa-solid fa-upload"></i></div>
+            <div>
+              <div class="card-title">Source Configuration</div>
+              <div class="card-sub">origin database connection</div>
+            </div>
+          </div>
+          <div class="pill" id="srcPill">Disconnected</div>
+        </div>
+
+        <div class="form-group">
+          <label for="srcEngine">Source Database <span class="req">*</span></label>
+          <select id="srcEngine" onchange="handleEngineChange('src')">
+            <option value="">-- Select database engine --</option>
+            <option value="mysql">MySQL</option>
+            <option value="sqlserver">SQL Server</option>
+            <option value="snowflake">Snowflake</option>
+            <option value="postgresql">PostgreSQL</option>
+          </select>
+        <div class="field-err" id="srcEngineErr">Select an engine.</div>
+      </div>
+
+      <div class="check" title="Select one of the reusable source connections created in the dedicated connections module.">
+        <label for="srcConnectionProfile">Choose Connection <span class="req">*</span></label>
+        <div class="form-row">
+          <div class="form-group">
+            <select id="srcConnectionProfile" onchange="applyConnectionProfile('src')">
+              <option value="">-- Select connection --</option>
+            </select>
+          </div>
+          <div class="btn-row">
+                <a class="btn btn-ghost btn-link" href="connection-manager.html" title="Manage Connections" aria-label="Manage Connections"><i class="fa-solid fa-plug-circle-plus"></i></a>
+          </div>
+        </div>
+        <small>Select one of the reusable source connections created in the dedicated connections module.</small>
+      </div>
+
+        <div id="srcDynFields"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="srcTestBtn" onclick="testConn('src')" disabled>
+            <i class="fa-solid fa-plug-circle-bolt"></i> Test Connection
+          </button>
+        </div>
+
+        <div id="srcPostConn" style="display:none">
+          <div class="section-label">Object Selection</div>
+          <div class="inline-field">
+            <div class="form-group">
+              <label for="srcDatabase">Database <span class="req">*</span></label>
+              <select id="srcDatabase" onchange="handleDatabaseChange('src')">
+                <option value="">-- Select database --</option>
+              </select>
+            </div>
+            <button class="icon-btn" type="button" id="srcRefreshDbBtn" onclick="refreshDatabases('src')" title="Refresh databases" disabled>
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+          </div>
+          <div class="form-group">
+            <label for="srcSchema">Schema <span class="opt">(optional)</span></label>
+            <select id="srcSchema" onchange="handleSchemaChange('src')" disabled>
+              <option value="">-- Select schema --</option>
+            </select>
+          </div>
+          <div class="check" title="Migrate every object in the selected object types using the backend execution order.">
+            <label><input type="checkbox" id="srcMigrateAll" onchange="toggleMigrateAll()"> Migrate All</label>
+            <small>Migrate every object in the selected object types using the backend execution order.</small>
+          </div>
+          <div class="form-group" id="srcBulkTypeWrap" style="display:none">
+            <label>Object Types <span class="req">*</span></label>
+            <div class="object-type-grid" id="srcObjectTypeChecks"></div>
+          </div>
+          <div id="srcSingleSelection">
+            <div class="form-group">
+              <label for="srcObjectType">Object Type <span class="req">*</span></label>
+              <select id="srcObjectType" onchange="onObjTypeChange('src')" disabled>
+                <option value="">-- Select object type --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="srcObjectName">Object Name <span class="req">*</span></label>
+              <select id="srcObjectName" onchange="onObjectNameSelectionChange()" disabled title="Select one object from the dropdown. Choose Multi Select to enable the checkbox list below.">
+                <option value="">-- Select object name --</option>
+              </select>
+              <small>Select one object from the dropdown. Choose `Multi Select` to enable the checkbox list below.</small>
+            </div>
+            <div class="form-group" id="srcObjectChecksWrap" style="display:none">
+              <label>Selected Object Names <span class="opt">(optional multi-select)</span></label>
+              <div id="srcObjectChecks" class="object-type-grid"></div>
+            </div>
+          </div>
+          <div class="check" id="srcMigrateDataWrap" style="display:none" title="Visible only for tables and views. When enabled, rows are copied after schema migration.">
+            <label><input type="checkbox" id="srcMigrateData" onchange="syncDataModeState(); updateMigrateBtn()"> Migrate Data Also</label>
+            <small id="srcMigrateDataHelp">Visible only for tables and views. When enabled, rows are copied after schema migration.</small>
+            <div class="form-group" id="srcDataOnlyWrap" style="margin-top:12px; display:none">
+              <label title="Use this when the target table already exists and you want to copy rows without running schema DDL."><input type="checkbox" id="srcDataOnly" onchange="syncDataModeState()"> Data Only</label>
+              <small>Use this when the target table already exists and you want to copy rows without running schema DDL.</small>
+            </div>
+              <div class="form-group" id="srcDataModeWrap" style="display:none">
+                <label for="srcDataMode">Data Migration Mode</label>
+                <select id="srcDataMode" onchange="updateMigrateBtn()" title="Upsert is recommended when the target table already contains rows and has a primary key.">
+                  <option value="insert">Insert Only</option>
+                  <option value="upsert">Upsert By Primary Key</option>
+                  <option value="skip_existing">Skip Existing Primary Keys</option>
+                </select>
+                <div class="field-help">`Upsert` is recommended when the target table already contains rows and has a primary key.</div>
+                <label for="srcDataBatchSize" style="margin-top:12px">Batch Size</label>
+                <input type="number" id="srcDataBatchSize" min="100" step="100" value="1000" onchange="updateMigrateBtn()" title="Controls how many rows are read and written per batch. Lower values use less memory; higher values can improve throughput.">
+                <div class="field-help">Controls how many rows are read and written per batch. Lower values use less memory; higher values can improve throughput.</div>
+              </div>
+            </div>
+          </div>
+      </div>
+      <div class="card target">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="card-icon"><i class="fa-solid fa-download"></i></div>
+            <div>
+              <div class="card-title">Target Configuration</div>
+              <div class="card-sub">destination database connection</div>
+            </div>
+          </div>
+          <div class="pill" id="tgtPill">Disconnected</div>
+        </div>
+
+        <div class="form-group">
+          <label for="tgtEngine">Target Database <span class="req">*</span></label>
+          <select id="tgtEngine" onchange="handleEngineChange('tgt')">
+            <option value="">-- Select database engine --</option>
+            <option value="mysql">MySQL</option>
+            <option value="sqlserver">SQL Server</option>
+            <option value="snowflake">Snowflake</option>
+            <option value="postgresql">PostgreSQL</option>
+          </select>
+        <div class="field-err" id="tgtEngineErr">Select an engine.</div>
+      </div>
+
+      <div class="check" title="Select one of the reusable target connections created in the dedicated connections module.">
+        <label for="tgtConnectionProfile">Choose Connection <span class="req">*</span></label>
+        <div class="form-row">
+          <div class="form-group">
+            <select id="tgtConnectionProfile" onchange="applyConnectionProfile('tgt')">
+              <option value="">-- Select connection --</option>
+            </select>
+          </div>
+          <div class="btn-row">
+                <a class="btn btn-ghost btn-link" href="connection-manager.html" title="Manage Connections" aria-label="Manage Connections"><i class="fa-solid fa-plug-circle-plus"></i></a>
+          </div>
+        </div>
+        <small>Select one of the reusable target connections created in the dedicated connections module.</small>
+      </div>
+
+        <div id="tgtDynFields"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-target" id="tgtTestBtn" onclick="testConn('tgt')" disabled>
+            <i class="fa-solid fa-plug-circle-bolt"></i> Test Connection
+          </button>
+        </div>
+
+        <div class="inline-checks" title="Hover each option to review its effect before running the migration.">
+          <div class="check" title="Clears the target table before copying rows. Use this only when you want a full reload.">
+            <label><input type="checkbox" id="tgtTruncateBeforeLoad" onchange="updateMigrateBtn()"> Truncate before load</label>
+          </div>
+          <div class="check" title="If the target table already exists, it will be dropped first, recreated from the transformed DDL, and then data will be loaded.">
+            <label><input type="checkbox" id="tgtDropAndCreateIfExists" onchange="updateMigrateBtn()"> Drop and create if exists</label>
+          </div>
+        </div>
+
+        <div id="tgtPostConn" style="display:none">
+          <div class="section-label">Object Selection</div>
+          <div class="inline-field">
+            <div class="form-group">
+              <label for="tgtDatabase">Database <span class="req">*</span></label>
+              <select id="tgtDatabase" onchange="handleDatabaseChange('tgt')">
+                <option value="">-- Select database --</option>
+              </select>
+            </div>
+            <button class="icon-btn" type="button" id="tgtRefreshDbBtn" onclick="refreshDatabases('tgt')" title="Refresh databases" disabled>
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+          </div>
+          <div class="form-group">
+            <label for="tgtSchema">Schema <span class="opt">(optional)</span></label>
+            <select id="tgtSchema" onchange="handleSchemaChange('tgt')" disabled>
+              <option value="">-- Select schema --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tgtObjectType">Target Object Type <span class="opt">(optional)</span></label>
+            <select id="tgtObjectType" onchange="updateMigrateBtn()" disabled>
+              <option value="">-- Existing objects in schema --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="action">
+      <div>
+        <h3 id="actionTitle">Configure Connections</h3>
+        <p id="actionSub">Connect both source and target databases to enable migration.</p>
+      </div>
+      <div class="console-actions">
+        <button class="btn btn-ghost" onclick="resetAll()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+        <button class="btn btn-ghost" id="resumeBtn" onclick="resumeMigration()" style="display:none"><i class="fa-solid fa-forward"></i> Resume</button>
+        <button class="btn btn-ghost" id="stopBtn" onclick="stopCurrentMigration()" style="display:none"><i class="fa-solid fa-stop"></i> Stop</button>
+        <button class="btn btn-primary" id="migrateBtn" onclick="proceedMigrate()" disabled><i class="fa-solid fa-paper-plane"></i> Proceed to Migrate</button>
+      </div>
+    </section>
+
+    <section class="console">
+      <div class="console-head">
+        <div>
+          <div class="console-title">Migration Console</div>
+          <div class="console-sub">Live backend logs and transformed SQL</div>
+        </div>
+        <div class="console-actions">
+          <button class="btn btn-ghost" id="copyBtn" onclick="copyLogs()"><i class="fa-regular fa-copy"></i> Copy Logs</button>
+          <button class="btn btn-ghost" onclick="clearLogs()"><i class="fa-solid fa-broom"></i> Clear</button>
+          <button class="btn btn-ghost" onclick="downloadLogs()"><i class="fa-solid fa-download"></i> Download</button>
+        </div>
+      </div>
+      <div class="console-body" id="logBody">
+        <div class="log-empty" id="logEmpty"><i class="fa-solid fa-terminal"></i> Awaiting operations...</div>
+      </div>
+    </section>
+    <section class="run-snapshot">
+      <div class="snapshot-head">
+        <div>
+          <div class="snapshot-title">Latest Run Snapshot</div>
+          <div class="snapshot-sub">This page stays focused on execution. Open the dedicated history page for filtering, exports, pagination, and diagnostics.</div>
+        </div>
+        <div class="console-actions">
+          <a class="btn btn-ghost" href="migration-history.html"><i class="fa-solid fa-chart-column"></i> Open Full History</a>
+        </div>
+      </div>
+      <div class="snapshot-grid">
+        <div class="snapshot-kpis">
+          <div class="snapshot-card"><div class="snapshot-label">Status</div><div class="snapshot-value" id="latestRunStatus">Idle</div></div>
+          <div class="snapshot-card"><div class="snapshot-label">Objects</div><div class="snapshot-value" id="latestRunObjects">0</div></div>
+          <div class="snapshot-card"><div class="snapshot-label">Success</div><div class="snapshot-value" id="latestRunSuccess">0</div></div>
+          <div class="snapshot-card"><div class="snapshot-label">Errors</div><div class="snapshot-value" id="latestRunErrors">0</div></div>
+          <div class="snapshot-card"><div class="snapshot-label">Rows</div><div class="snapshot-value" id="latestRunRows">0</div></div>
+        </div>
+        <div class="snapshot-box">
+          <div class="snapshot-label">Latest Run</div>
+          <div class="snapshot-code" id="latestRunMeta">No migration has been run in this session.</div>
+          <div class="snapshot-meta" id="latestRunTypes">Per-type counters will appear here after the next run.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="connectionModal" onclick="handleConnectionModalBackdrop(event)">
+    <div class="modal-shell" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="connectionModalTitle">Create Connection</div>
+          <div class="modal-sub" id="connectionModalSub">Save reusable connection details locally.</div>
+        </div>
+        <button class="btn btn-ghost" type="button" onclick="closeConnectionModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="connectionCreatePane">
+          <div class="form-group">
+            <label for="connectionProfileName">Connection Name</label>
+            <input class="input" id="connectionProfileName" placeholder="e.g. Snowflake QA">
+          </div>
+          <div class="modal-box">
+            <div class="section-label">Current Connection Snapshot</div>
+            <div class="modal-code" id="connectionProfilePreview">No connection details available yet.</div>
+          </div>
+        </div>
+        <div id="connectionManagePane" style="display:none">
+          <div class="form-group">
+            <label for="connectionManageSelect">Saved Connections</label>
+            <select id="connectionManageSelect" onchange="renderConnectionManagePreview()">
+              <option value="">-- Select saved connection --</option>
+            </select>
+          </div>
+          <div class="modal-box">
+            <div class="section-label">Saved Connection Details</div>
+            <div class="modal-code" id="connectionManagePreview">Select a saved connection to review it here.</div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-primary" type="button" onclick="applySelectedModalProfile()">Apply</button>
+            <button class="btn btn-ghost" type="button" onclick="replaceSelectedModalProfile()">Replace With Current Form</button>
+            <button class="btn btn-ghost" type="button" onclick="deleteSelectedModalProfile()">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" onclick="closeConnectionModal()">Cancel</button>
+        <button class="btn btn-primary" id="connectionModalSaveBtn" type="button" onclick="createConnectionProfileFromModal()">Save Connection</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="themeSettingsModal" onclick="handleThemeSettingsBackdrop(event)">
+    <div class="modal-shell" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Theme Settings</div>
+          <div class="modal-sub">Apply one theme preference across the whole application.</div>
+        </div>
+        <button class="btn btn-ghost" type="button" onclick="closeThemeSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="settingsThemeSelect">Theme</label>
+          <select id="settingsThemeSelect">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+          <div class="field-help">`Auto` follows the operating system. `Light` and `Dark` override all pages.</div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" onclick="closeThemeSettingsModal()">Cancel</button>
+        <button class="btn btn-primary" type="button" onclick="saveThemeSettings()">Save Theme</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+<script src="rbac.js"></script>
+<script>
+'use strict';
+const THEME_KEY = 'dbm_theme';
+const SESSION_INFO = DBM_RBAC.getSession();
+const IS_VIEW_ONLY = DBM_RBAC.hasPermission('viewOnly', SESSION_INFO.role);
+const CAN_MANAGE_CONNECTIONS = DBM_RBAC.hasPermission('manageConnections', SESSION_INFO.role);
+const CAN_OPERATE_MIGRATIONS = DBM_RBAC.hasPermission('operateMigrations', SESSION_INFO.role);
+
+if (!SESSION_INFO.isAuthenticated) {
+  window.location.replace('login.html');
+} else if (!DBM_RBAC.canAccessPage('migrator', SESSION_INFO.role)) {
+  window.location.replace('home.html');
+}
+
+const sessionUser = SESSION_INFO.username || 'User';
+const sessionRole = SESSION_INFO.roleLabel || 'Migration User';
+document.getElementById('sessionUserName').textContent = sessionUser;
+document.getElementById('sessionUserRole').textContent = sessionRole;
+document.getElementById('sessionUserAvatar').textContent = sessionUser.slice(0, 2).toUpperCase();
+
+function resolveTheme(pref) {
+  if (pref === 'light' || pref === 'dark') return pref;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function changeTheme(pref) {
+  localStorage.setItem(THEME_KEY, pref);
+  document.documentElement.dataset.theme = resolveTheme(pref);
+}
+
+function initTheme() {
+  const pref = localStorage.getItem(THEME_KEY) || 'auto';
+  document.documentElement.dataset.theme = resolveTheme(pref);
+}
+
+function toggleUserMenu(event) {
+  event.stopPropagation();
+  document.getElementById('userDropdown').classList.toggle('open');
+}
+
+function closeUserMenu() {
+  document.getElementById('userDropdown').classList.remove('open');
+}
+
+function handleUserMenuAction(action) {
+  closeUserMenu();
+  if (action === 'notifications') {
+    showToast('info', 'Notifications', 'Notification center is available from the current user menu.');
+    return;
+  }
+  if (action === 'settings') {
+    openThemeSettingsModal();
+  }
+}
+
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.user-menu')) {
+    closeUserMenu();
+  }
+});
+
+function logout() {
+  DBM_RBAC.logout();
+  window.location.replace('login.html');
+}
+
+function ensureMigrationOperation() {
+  if (CAN_OPERATE_MIGRATIONS) return true;
+  showToast('info', 'Viewer Access', 'This role can inspect the migration workspace and history but cannot run or modify migrations.');
+  return false;
+}
+
+function ensureConnectionManagement() {
+  if (CAN_MANAGE_CONNECTIONS) return true;
+  showToast('info', 'Restricted Action', 'Only admin users can manage saved connections.');
+  return false;
+}
+
+const API_BASE = 'http://127.0.0.1:8000/api';
+const RESUME_CHECKPOINT_KEY = 'dbm_resume_checkpoint';
+const APP = {
+  src: { connected: false, engine: '', selectedConnection: null, objectSummary: {}, cache: { databases: null, schemas: {}, summaries: {}, objects: {} } },
+  tgt: { connected: false, engine: '', selectedConnection: null, cache: { databases: null, schemas: {}, summaries: {}, objects: {} } },
+  history: { items: [], filteredItems: [], pagedItems: [], selectedRunId: '', selectedRecord: null, errorOnly: false, page: 1, totalPages: 1, filters: { search: '', status: '', objectType: '', dateFrom: '', dateTo: '', sort: 'started_desc', pageSize: '10' } },
+  connectionModal: { side: 'src', mode: 'create' },
+  migration: { active: false, runId: '', stopRequested: false, resumeCheckpoint: null }
+};
+const CONNECTION_PROFILE_KEY = 'dbm_connection_profiles';
+const DB_SCHEMAS = {
+  sqlserver: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'e.g. 192.168.1.10', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '1433', req: false, def: '1433' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'sa', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  mysql: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'localhost', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '3306', req: false, def: '3306' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'root', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  oracle: [
+    { id: 'host', label: 'Host / TNS', type: 'text', ph: 'oracle-host or ORCL', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '1521', req: false, def: '1521' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'system', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  snowflake: [
+    { id: 'account', label: 'Account / Host', type: 'text', ph: 'xy12345.eu-north-1.aws or xy12345.eu-north-1.aws.snowflakecomputing.com', req: true, hint: 'Preferred format is the Snowflake account identifier. If your admin gave you an org-account name, use that instead of the full hostname.' },
+    { id: 'warehouse', label: 'Warehouse', type: 'text', ph: 'COMPUTE_WH', req: true },
+    { id: 'role', label: 'Role', type: 'text', ph: 'SYSADMIN', req: false },
+    { id: 'username', label: 'Username', type: 'text', ph: 'my_user', req: true, hint: 'Use the Snowflake LOGIN_NAME, not the display name, if they are different.' },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  postgresql: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'localhost', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '5432', req: false, def: '5432' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'postgres', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  mongodb: [{ id: 'uri', label: 'Connection URI', type: 'text', ph: 'mongodb+srv://user:pass@cluster.mongodb.net', req: true }],
+  redshift: [
+    { id: 'host', label: 'Cluster Endpoint', type: 'text', ph: 'cluster.region.redshift.amazonaws.com', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '5439', req: false, def: '5439' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'awsuser', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  azuresql: [
+    { id: 'host', label: 'Server Name', type: 'text', ph: 'server.database.windows.net', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '1433', req: false, def: '1433' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'sqladmin@server', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  gcloudsql: [
+    { id: 'host', label: 'Connection Name / IP', type: 'text', ph: 'project:region:instance', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '5432', req: false, def: '5432' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'postgres', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  teradata: [
+    { id: 'host', label: 'Teradata Server', type: 'text', ph: 'tdserver.example.com', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '1025', req: false, def: '1025' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'dbc', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ],
+  db2: [
+    { id: 'host', label: 'Host', type: 'text', ph: 'db2-host.example.com', req: true },
+    { id: 'port', label: 'Port', type: 'number', ph: '50000', req: false, def: '50000' },
+    { id: 'username', label: 'Username', type: 'text', ph: 'db2admin', req: true },
+    { id: 'password', label: 'Password', type: 'password', ph: '********', req: true }
+  ]
+};
+const DB_LABELS = {
+  sqlserver: 'SQL Server', mysql: 'MySQL', oracle: 'Oracle', snowflake: 'Snowflake',
+  postgresql: 'PostgreSQL', mongodb: 'MongoDB', redshift: 'Amazon Redshift',
+  azuresql: 'Azure SQL', gcloudsql: 'Google Cloud SQL', teradata: 'Teradata', db2: 'DB2'
+};
+const API_DB_TYPES = {
+  sqlserver: 'SQL Server',
+  azuresql: 'Azure SQL',
+  mysql: 'MySQL',
+  postgresql: 'PostgreSQL',
+  redshift: 'Amazon Redshift',
+  gcloudsql: 'Google Cloud SQL',
+  snowflake: 'Snowflake'
+};
+const OBJECT_TYPE_LABELS = {
+  table: 'Tables',
+  view: 'Views',
+  storedprocedure: 'Stored Procedures',
+  function: 'Functions',
+  trigger: 'Triggers',
+  cursor: 'Cursors',
+  event: 'Events',
+  sequence: 'Sequences',
+  synonym: 'Synonyms'
+};
+const LOG_CLS = { info: 'll-info', success: 'll-success', error: 'll-error', warn: 'll-warn', dim: 'll-dim', blue: 'll-blue' };
+const BULK_LABEL = '<i class="fa-solid fa-layer-group"></i> Migrate All';
+const SINGLE_LABEL = '<i class="fa-solid fa-paper-plane"></i> Proceed to Migrate';
+const MULTI_SELECT_VALUE = '__MULTI_SELECT__';
+const SOURCE_DEFAULT_VALUE = '__SOURCE_DEFAULT__';
+const SOURCE_DEFAULT_LABELS = {
+  Database: 'Default (Use Source Database)',
+  Schema: 'Default (Use Source Schema)'
+};
+
+function getStatusClass(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'success') return 'status-success';
+  if (normalized === 'error') return 'status-error';
+  if (normalized === 'partial') return 'status-partial';
+  return 'status-skipped';
+}
+
+function fmtDateTime(value) {
+  if (!value) return '--';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+}
+
+function fmtDuration(startValue, endValue) {
+  if (!startValue || !endValue) return '--';
+  const start = new Date(startValue).getTime();
+  const end = new Date(endValue).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return '--';
+  const totalSeconds = Math.floor((end - start) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours}h ${minutes}m ${String(seconds).padStart(2, '0')}s`;
+  if (minutes > 0) return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+  return `${seconds}s`;
+}
+
+function summarizeByType(byType) {
+  return Object.entries(byType || {})
+    .filter(([, counters]) => (counters?.total || 0) > 0)
+    .map(([type, counters]) => `${type}:${counters.success || 0}/${counters.total || 0}`)
+    .join(' | ');
+}
+
+function updateLatestRunSummary(runSummary) {
+  const stats = runSummary?.stats || {};
+  document.getElementById('latestRunStatus').textContent = String(runSummary?.status || 'idle').toUpperCase();
+  document.getElementById('latestRunObjects').textContent = String(stats.total_objects || 0);
+  document.getElementById('latestRunSuccess').textContent = String(stats.success_objects || 0);
+  document.getElementById('latestRunErrors').textContent = String(stats.error_objects || 0);
+  document.getElementById('latestRunRows').textContent = String(stats.total_rows_migrated || 0);
+  document.getElementById('latestRunMeta').textContent = runSummary
+    ? `${runSummary.run_id || '--'} | ${runSummary.source_db || '--'} -> ${runSummary.target_db || '--'} | Start: ${fmtDateTime(runSummary.started_at)} | End: ${fmtDateTime(runSummary.completed_at)} | Duration: ${fmtDuration(runSummary.started_at, runSummary.completed_at)}`
+    : 'No migration has been run in this session.';
+  document.getElementById('latestRunTypes').textContent = summarizeByType(stats.by_type) || 'Per-type counters will appear here after the next run.';
+}
+
+function getHistoryFilterValues() {
+  return {
+    search: document.getElementById('historySearch')?.value.trim().toLowerCase() || '',
+    status: document.getElementById('historyStatusFilter')?.value || '',
+    objectType: document.getElementById('historyTypeFilter')?.value || '',
+    dateFrom: document.getElementById('historyDateFrom')?.value || '',
+    dateTo: document.getElementById('historyDateTo')?.value || '',
+    sort: document.getElementById('historySortOrder')?.value || 'started_desc',
+    pageSize: document.getElementById('historyPageSize')?.value || '10'
+  };
+}
+
+function populateHistoryTypeFilter(items) {
+  const select = document.getElementById('historyTypeFilter');
+  const types = new Set();
+  items.forEach((item) => {
+    const objectResults = item?.run_summary?.object_results || [];
+    objectResults.forEach((result) => {
+      if (result?.object_type) types.add(result.object_type);
+    });
+  });
+  const current = APP.history.filters.objectType || '';
+  select.innerHTML = '<option value="">All Object Types</option>' + Array.from(types).sort().map((type) =>
+    `<option value="${escHtml(type)}">${escHtml(type)}</option>`
+  ).join('');
+  select.value = Array.from(types).includes(current) ? current : '';
+}
+
+function filterHistoryItems(items, filters) {
+  return items.filter((item) => {
+    const run = item?.run_summary || {};
+    const objectResults = run.object_results || [];
+    const startedAt = run.started_at ? new Date(run.started_at) : null;
+    const matchesStatus = !filters.status || String(run.status || '').toLowerCase() === filters.status;
+    const matchesType = !filters.objectType || objectResults.some((result) => result.object_type === filters.objectType);
+    const haystack = [
+      run.run_id,
+      run.source_db,
+      run.target_db,
+      ...objectResults.map((result) => `${result.object_type || ''} ${result.object_name || ''}`)
+    ].join(' ').toLowerCase();
+    const matchesSearch = !filters.search || haystack.includes(filters.search);
+    const matchesDateFrom = !filters.dateFrom || (startedAt && !Number.isNaN(startedAt.getTime()) && startedAt >= new Date(`${filters.dateFrom}T00:00:00`));
+    const matchesDateTo = !filters.dateTo || (startedAt && !Number.isNaN(startedAt.getTime()) && startedAt <= new Date(`${filters.dateTo}T23:59:59`));
+    return matchesStatus && matchesType && matchesSearch && matchesDateFrom && matchesDateTo;
+  });
+}
+
+function sortHistoryItems(items, sort) {
+  const sorted = [...items];
+  const getStarted = (item) => new Date(item?.run_summary?.started_at || 0).getTime() || 0;
+  const getErrors = (item) => Number(item?.run_summary?.stats?.error_objects || 0);
+  const getObjects = (item) => Number(item?.run_summary?.stats?.total_objects || 0);
+  const getRows = (item) => Number(item?.run_summary?.stats?.total_rows_migrated || 0);
+  if (sort === 'started_asc') {
+    sorted.sort((a, b) => getStarted(a) - getStarted(b));
+  } else if (sort === 'errors_desc') {
+    sorted.sort((a, b) => getErrors(b) - getErrors(a) || getStarted(b) - getStarted(a));
+  } else if (sort === 'objects_desc') {
+    sorted.sort((a, b) => getObjects(b) - getObjects(a) || getStarted(b) - getStarted(a));
+  } else if (sort === 'rows_desc') {
+    sorted.sort((a, b) => getRows(b) - getRows(a) || getStarted(b) - getStarted(a));
+  } else {
+    sorted.sort((a, b) => getStarted(b) - getStarted(a));
+  }
+  return sorted;
+}
+
+function paginateHistoryItems(items, page, pageSize) {
+  const size = Math.max(1, Number(pageSize || 10));
+  const totalPages = Math.max(1, Math.ceil(items.length / size));
+  const safePage = Math.min(Math.max(1, Number(page || 1)), totalPages);
+  const start = (safePage - 1) * size;
+  return {
+    items: items.slice(start, start + size),
+    page: safePage,
+    totalPages
+  };
+}
+
+function updateHistoryPaginationInfo(totalItems) {
+  const info = document.getElementById('historyPageInfo');
+  const prevBtn = document.getElementById('historyPrevBtn');
+  const nextBtn = document.getElementById('historyNextBtn');
+  info.textContent = `Page ${APP.history.page} of ${APP.history.totalPages} | ${totalItems} run(s)`;
+  prevBtn.disabled = APP.history.page <= 1;
+  nextBtn.disabled = APP.history.page >= APP.history.totalPages;
+}
+
+function changeHistoryPage(direction) {
+  APP.history.page = Math.max(1, APP.history.page + direction);
+  applyHistoryFilters(false);
+}
+
+function applyHistoryFilters(resetPage = true) {
+  APP.history.filters = getHistoryFilterValues();
+  APP.history.filteredItems = sortHistoryItems(
+    filterHistoryItems(APP.history.items, APP.history.filters),
+    APP.history.filters.sort
+  );
+  if (resetPage) APP.history.page = 1;
+  const paged = paginateHistoryItems(
+    APP.history.filteredItems,
+    APP.history.page,
+    APP.history.filters.pageSize
+  );
+  APP.history.page = paged.page;
+  APP.history.totalPages = paged.totalPages;
+  APP.history.pagedItems = paged.items;
+  if (!APP.history.filteredItems.some((item) => item?.run_summary?.run_id === APP.history.selectedRunId)) {
+    APP.history.selectedRunId = APP.history.filteredItems[0]?.run_summary?.run_id || '';
+  }
+  renderHistoryMetrics(APP.history.filteredItems);
+  renderHistoryList(APP.history.pagedItems);
+  updateHistoryPaginationInfo(APP.history.filteredItems.length);
+  if (APP.history.selectedRunId) {
+    selectHistoryRun(APP.history.selectedRunId);
+  } else {
+    renderHistoryDetail(null);
+  }
+}
+
+function resetHistoryFilters() {
+  document.getElementById('historySearch').value = '';
+  document.getElementById('historyStatusFilter').value = '';
+  document.getElementById('historyTypeFilter').value = '';
+  document.getElementById('historyDateFrom').value = '';
+  document.getElementById('historyDateTo').value = '';
+  document.getElementById('historySortOrder').value = 'started_desc';
+  document.getElementById('historyPageSize').value = '10';
+  APP.history.filters = { search: '', status: '', objectType: '', dateFrom: '', dateTo: '', sort: 'started_desc', pageSize: '10' };
+  APP.history.page = 1;
+  applyHistoryFilters();
+}
+
+function exportHistory(format) {
+  const items = APP.history.filteredItems || [];
+  if (!items.length) {
+    showToast('info', 'No Data', 'There are no filtered history records to export.');
+    return;
+  }
+  let content = '';
+  let mime = 'application/json';
+  let extension = 'json';
+  if (format === 'csv') {
+    extension = 'csv';
+    mime = 'text/csv';
+    const rows = [['run_id', 'status', 'source_db', 'target_db', 'started_at', 'completed_at', 'total_objects', 'success_objects', 'error_objects', 'skipped_objects', 'total_rows_migrated', 'total_retries']];
+    items.forEach((item) => {
+      const run = item.run_summary || {};
+      const stats = run.stats || {};
+      rows.push([
+        run.run_id || '',
+        run.status || '',
+        run.source_db || '',
+        run.target_db || '',
+        run.started_at || '',
+        run.completed_at || '',
+        stats.total_objects || 0,
+        stats.success_objects || 0,
+        stats.error_objects || 0,
+        stats.skipped_objects || 0,
+        stats.total_rows_migrated || 0,
+        stats.total_retries || 0
+      ]);
+    });
+    content = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+  } else {
+    content = JSON.stringify(items, null, 2);
+  }
+  const blob = new Blob([content], { type: mime });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `migration-history-${Date.now()}.${extension}`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('success', 'Export Complete', `Filtered history exported as ${extension.toUpperCase()}.`);
+}
+
+function toggleHistoryErrorOnly() {
+  APP.history.errorOnly = !APP.history.errorOnly;
+  const btn = document.getElementById('historyErrorOnlyBtn');
+  btn.classList.toggle('btn-primary', APP.history.errorOnly);
+  btn.classList.toggle('btn-ghost', !APP.history.errorOnly);
+  if (APP.history.selectedRecord) {
+    renderHistoryDetail(APP.history.selectedRecord);
+  }
+}
+
+function escHtml(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function log(type, msg) {
+  const body = document.getElementById('logBody');
+  const empty = document.getElementById('logEmpty');
+  if (empty) empty.style.display = 'none';
+  const timestamp = `[${new Date().toLocaleTimeString('en-US', { hour12: false })}]`;
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="lt">${timestamp}</span><span class="la">&gt;</span><span class="${LOG_CLS[type] || 'll-dim'}">${escHtml(msg)}</span>`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function inferLogType(msg) {
+  const text = String(msg || '').toLowerCase();
+  if (text.includes('error') || text.includes('failed')) return 'error';
+  if (text.includes('success') || text.includes('completed')) return 'success';
+  if (text.includes('skipped') || text.includes('warning')) return 'warn';
+  if (text.includes('[migration]') || text.includes('execution order')) return 'blue';
+  return 'info';
+}
+
+function setResumeCheckpoint(checkpoint) {
+  APP.migration.resumeCheckpoint = checkpoint || null;
+  if (checkpoint) {
+    localStorage.setItem(RESUME_CHECKPOINT_KEY, JSON.stringify(checkpoint));
+  } else {
+    localStorage.removeItem(RESUME_CHECKPOINT_KEY);
+  }
+  updateExecutionControls();
+}
+
+function loadResumeCheckpoint() {
+  try {
+    const raw = localStorage.getItem(RESUME_CHECKPOINT_KEY);
+    APP.migration.resumeCheckpoint = raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    APP.migration.resumeCheckpoint = null;
+  }
+}
+
+function updateExecutionControls() {
+  const stopBtn = document.getElementById('stopBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
+  stopBtn.style.display = APP.migration.active ? 'inline-flex' : 'none';
+  stopBtn.disabled = !APP.migration.active || APP.migration.stopRequested;
+  stopBtn.innerHTML = APP.migration.stopRequested
+    ? '<i class="fa-solid fa-hourglass-half"></i> Stopping...'
+    : '<i class="fa-solid fa-stop"></i> Stop';
+  resumeBtn.style.display = APP.migration.resumeCheckpoint ? 'inline-flex' : 'none';
+  resumeBtn.disabled = APP.migration.active || !APP.migration.resumeCheckpoint;
+}
+
+function showToast(type, title, msg) {
+  const wrap = document.getElementById('toastWrap');
+  const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<div><i class="fa-solid ${icons[type] || icons.info}"></i></div><div><div class="toast-title">${escHtml(title)}</div><div class="toast-msg">${escHtml(msg)}</div></div><button class="toast-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>`;
+  wrap.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4500);
+}
+
+function clearLogs() {
+  document.getElementById('logBody').innerHTML = '<div class="log-empty" id="logEmpty"><i class="fa-solid fa-terminal"></i> Awaiting operations...</div>';
+}
+
+function copyLogs() {
+  const lines = Array.from(document.querySelectorAll('#logBody .log-line'));
+  if (!lines.length) {
+    log('dim', '[SYSTEM] Nothing to copy.');
+    return;
+  }
+  navigator.clipboard.writeText(lines.map((line) => line.textContent).join('\n')).then(() => {
+    showToast('success', 'Copied', 'Logs copied to clipboard.');
+  }).catch(() => {
+    showToast('error', 'Clipboard Failed', 'Clipboard access denied.');
+  });
+}
+
+function downloadLogs() {
+  const lines = Array.from(document.querySelectorAll('#logBody .log-line'));
+  if (!lines.length) {
+    log('dim', '[SYSTEM] Nothing to download.');
+    return;
+  }
+  const blob = new Blob([lines.map((line) => line.textContent).join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `migration-${Date.now()}.log`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function renderField(field, side) {
+  const fid = `${side}_${field.id}`;
+  const req = field.req ? '<span class="req">*</span>' : '<span class="opt">(opt)</span>';
+  const def = field.def || '';
+  const hint = field.hint ? `<div class="field-help">${field.hint}</div>` : '';
+  if (field.type === 'password') {
+    return `<div class="form-group"><label for="${fid}">${field.label} ${req}</label><div class="pw-wrap"><input class="input" type="password" id="${fid}" placeholder="${field.ph}" value="${def}" oninput="clearErr('${fid}')"><button class="pw-eye" type="button" onclick="togglePw('${fid}', this)"><i class="fa-regular fa-eye"></i></button></div>${hint}<div class="field-err" id="${fid}Err">Required.</div></div>`;
+  }
+  return `<div class="form-group"><label for="${fid}">${field.label} ${req}</label><input class="input" type="${field.type}" id="${fid}" placeholder="${field.ph}" value="${def}" oninput="clearErr('${fid}')">${hint}<div class="field-err" id="${fid}Err">Required.</div></div>`;
+}
+
+function buildFieldsHTML(fields, side) {
+  const hostField = fields.find((field) => field.id === 'host');
+  const portField = fields.find((field) => field.id === 'port');
+  let html = '<div class="section-label">Connection Details</div>';
+  if (hostField && portField) {
+    html += `<div class="form-row">${renderField(hostField, side)}${renderField(portField, side)}</div>`;
+    fields.filter((field) => field.id !== 'host' && field.id !== 'port').forEach((field) => { html += renderField(field, side); });
+    return html;
+  }
+  fields.forEach((field) => { html += renderField(field, side); });
+  return html;
+}
+
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.querySelector('i').className = el.type === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+}
+
+function clearErr(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('invalid');
+  const err = document.getElementById(id + 'Err');
+  if (err) err.style.display = 'none';
+}
+
+function showErrEl(id) {
+  const err = document.getElementById(id);
+  if (err) err.style.display = 'block';
+}
+
+function markErr(inputId, errId) {
+  const el = document.getElementById(inputId);
+  if (el) el.classList.add('invalid');
+  showErrEl(errId);
+}
+function getVal(side, field) {
+  const el = document.getElementById(`${side}_${field}`);
+  return el ? el.value.trim() : '';
+}
+
+function getConnectionProfiles() {
+  try {
+    return JSON.parse(localStorage.getItem(CONNECTION_PROFILE_KEY) || '[]');
+  } catch (_) {
+    return [];
+  }
+}
+
+function setConnectionProfiles(profiles) {
+  localStorage.setItem(CONNECTION_PROFILE_KEY, JSON.stringify(profiles));
+}
+
+function getCurrentConnectionSnapshot(side) {
+  const engine = document.getElementById(side + 'Engine').value;
+  if (!engine) return null;
+  const details = {};
+  (DB_SCHEMAS[engine] || []).forEach((field) => {
+    const value = getVal(side, field.id);
+    if (value) details[field.id] = value;
+  });
+  if (!Object.keys(details).length) return null;
+  return { engine, details };
+}
+
+function formatConnectionPreview(profile) {
+  if (!profile) return 'No connection details available.';
+  const lines = [
+    `Engine: ${DB_LABELS[profile.engine] || profile.engine}`,
+    ...Object.entries(profile.details || {}).map(([key, value]) => `${key}: ${key === 'password' ? '********' : value}`)
+  ];
+  return lines.join('\n');
+}
+
+function renderConnectionProfileOptions() {
+  const profiles = getConnectionProfiles();
+  ['src', 'tgt'].forEach((side) => {
+    const select = document.getElementById(`${side}ConnectionProfile`);
+    if (!select) return;
+    const engine = document.getElementById(side + 'Engine').value;
+    const current = select.value;
+    const filteredProfiles = engine ? profiles.filter((profile) => profile.engine === engine) : [];
+    select.innerHTML = '<option value="">-- Select connection --</option>' + filteredProfiles.map((profile) => `<option value="${escHtml(profile.id)}">${escHtml(profile.name)}</option>`).join('');
+    select.disabled = !engine;
+    select.value = filteredProfiles.some((profile) => profile.id === current) ? current : '';
+  });
+}
+
+function applyConnectionProfile(side) {
+  const profileId = document.getElementById(`${side}ConnectionProfile`).value;
+  APP[side].selectedConnection = null;
+  if (!profileId) {
+    document.getElementById(side + 'TestBtn').disabled = true;
+    updateMigrateBtn();
+    return;
+  }
+  const profile = getConnectionProfiles().find((item) => item.id === profileId);
+  if (!profile) {
+    showToast('error', 'Connection Missing', 'The selected saved connection could not be found.');
+    renderConnectionProfileOptions();
+    return;
+  }
+  APP[side].selectedConnection = profile;
+  document.getElementById(side + 'TestBtn').disabled = false;
+  updateMigrateBtn();
+  showToast('success', 'Connection Applied', `Applied "${profile.name}" to ${side === 'src' ? 'source' : 'target'}.`);
+}
+
+function openConnectionModal(side, mode) {
+  if (!ensureConnectionManagement()) return;
+  APP.connectionModal = { side, mode };
+  const modal = document.getElementById('connectionModal');
+  const title = document.getElementById('connectionModalTitle');
+  const sub = document.getElementById('connectionModalSub');
+  const createPane = document.getElementById('connectionCreatePane');
+  const managePane = document.getElementById('connectionManagePane');
+  const saveBtn = document.getElementById('connectionModalSaveBtn');
+  const sideLabel = side === 'src' ? 'source' : 'target';
+
+  if (mode === 'create') {
+    title.textContent = `Create ${side === 'src' ? 'Source' : 'Target'} Connection`;
+    sub.textContent = 'Save the currently entered connection details as a reusable profile.';
+    createPane.style.display = 'block';
+    managePane.style.display = 'none';
+    saveBtn.style.display = 'inline-flex';
+    document.getElementById('connectionProfileName').value = '';
+    document.getElementById('connectionProfilePreview').textContent = formatConnectionPreview(getCurrentConnectionSnapshot(side));
+  } else {
+    title.textContent = `Manage Saved ${side === 'src' ? 'Source' : 'Target'} Connections`;
+    sub.textContent = `Apply, replace, or delete saved connections for the ${sideLabel} side.`;
+    createPane.style.display = 'none';
+    managePane.style.display = 'block';
+    saveBtn.style.display = 'none';
+    const select = document.getElementById('connectionManageSelect');
+    select.innerHTML = '<option value="">-- Select saved connection --</option>' + getConnectionProfiles().map((profile) => `<option value="${escHtml(profile.id)}">${escHtml(profile.name)} (${escHtml(DB_LABELS[profile.engine] || profile.engine)})</option>`).join('');
+    select.value = document.getElementById(`${side}ConnectionProfile`).value || '';
+    renderConnectionManagePreview();
+  }
+
+  modal.classList.add('open');
+}
+
+function closeConnectionModal() {
+  document.getElementById('connectionModal').classList.remove('open');
+}
+
+function handleConnectionModalBackdrop(event) {
+  if (event.target.id === 'connectionModal') closeConnectionModal();
+}
+
+function openThemeSettingsModal() {
+  document.getElementById('settingsThemeSelect').value = localStorage.getItem(THEME_KEY) || 'auto';
+  document.getElementById('themeSettingsModal').classList.add('open');
+}
+
+function closeThemeSettingsModal() {
+  document.getElementById('themeSettingsModal').classList.remove('open');
+}
+
+function handleThemeSettingsBackdrop(event) {
+  if (event.target.id === 'themeSettingsModal') closeThemeSettingsModal();
+}
+
+function saveThemeSettings() {
+  const pref = document.getElementById('settingsThemeSelect').value || 'auto';
+  changeTheme(pref);
+  closeThemeSettingsModal();
+  showToast('success', 'Theme Updated', `Theme preference saved as ${pref}.`);
+}
+
+function createConnectionProfileFromModal() {
+  if (!ensureConnectionManagement()) return;
+  const name = document.getElementById('connectionProfileName').value.trim();
+  const { side } = APP.connectionModal;
+  const snapshot = getCurrentConnectionSnapshot(side);
+  if (!snapshot) {
+    showToast('error', 'Missing Details', 'Enter the connection details first, then create the saved connection.');
+    return;
+  }
+  if (!name) {
+    showToast('error', 'Missing Name', 'Enter a name for the saved connection.');
+    return;
+  }
+  const profiles = getConnectionProfiles();
+  const profile = { id: `conn_${Date.now()}`, name, engine: snapshot.engine, details: snapshot.details };
+  profiles.push(profile);
+  setConnectionProfiles(profiles);
+  renderConnectionProfileOptions();
+  document.getElementById(`${side}ConnectionProfile`).value = profile.id;
+  closeConnectionModal();
+  showToast('success', 'Connection Saved', `Saved "${profile.name}" for reuse.`);
+}
+
+function getSelectedManagedProfile() {
+  const profileId = document.getElementById('connectionManageSelect').value;
+  if (!profileId) return null;
+  return getConnectionProfiles().find((profile) => profile.id === profileId) || null;
+}
+
+function renderConnectionManagePreview() {
+  const profile = getSelectedManagedProfile();
+  document.getElementById('connectionManagePreview').textContent = profile ? `${profile.name}\n${formatConnectionPreview(profile)}` : 'Select a saved connection to review it here.';
+}
+
+function applySelectedModalProfile() {
+  const { side } = APP.connectionModal;
+  const profile = getSelectedManagedProfile();
+  if (!profile) {
+    showToast('error', 'No Connection Selected', 'Choose a saved connection first.');
+    return;
+  }
+  document.getElementById(`${side}ConnectionProfile`).value = profile.id;
+  applyConnectionProfile(side);
+  closeConnectionModal();
+}
+
+function replaceSelectedModalProfile() {
+  if (!ensureConnectionManagement()) return;
+  const profile = getSelectedManagedProfile();
+  const { side } = APP.connectionModal;
+  const snapshot = getCurrentConnectionSnapshot(side);
+  if (!profile) {
+    showToast('error', 'No Connection Selected', 'Choose a saved connection first.');
+    return;
+  }
+  if (!snapshot) {
+    showToast('error', 'Missing Details', 'Enter the current form connection details before replacing a saved connection.');
+    return;
+  }
+  const profiles = getConnectionProfiles().map((item) => item.id === profile.id ? { ...item, engine: snapshot.engine, details: snapshot.details } : item);
+  setConnectionProfiles(profiles);
+  renderConnectionProfileOptions();
+  document.getElementById('connectionManageSelect').value = profile.id;
+  renderConnectionManagePreview();
+  document.getElementById(`${side}ConnectionProfile`).value = profile.id;
+  showToast('success', 'Connection Updated', `Updated "${profile.name}" with the current form values.`);
+}
+
+function deleteSelectedModalProfile() {
+  if (!ensureConnectionManagement()) return;
+  const profile = getSelectedManagedProfile();
+  if (!profile) {
+    showToast('error', 'No Connection Selected', 'Choose a saved connection first.');
+    return;
+  }
+  if (!window.confirm(`Delete saved connection "${profile.name}"?`)) return;
+  setConnectionProfiles(getConnectionProfiles().filter((item) => item.id !== profile.id));
+  renderConnectionProfileOptions();
+  document.getElementById('connectionManageSelect').value = '';
+  renderConnectionManagePreview();
+  ['src', 'tgt'].forEach((side) => {
+    const select = document.getElementById(`${side}ConnectionProfile`);
+    if (select.value === profile.id) select.value = '';
+  });
+  showToast('success', 'Connection Deleted', `Deleted "${profile.name}".`);
+}
+
+function isEngineSupported(engine) {
+  return Boolean(API_DB_TYPES[engine]);
+}
+
+function validateSide(side) {
+  let ok = true;
+  const engine = document.getElementById(side + 'Engine').value;
+  if (!engine) {
+    markErr(side + 'Engine', side + 'EngineErr');
+    ok = false;
+  }
+  if (!APP[side].selectedConnection) {
+    showToast('error', 'Choose Connection', `Select a saved ${side === 'src' ? 'source' : 'target'} connection first.`);
+    ok = false;
+  }
+  return ok;
+}
+
+function updatePill(side, state) {
+  const pill = document.getElementById(side + 'Pill');
+  const map = {
+    disconnected: ['', 'Disconnected'],
+    connecting: ['', 'Connecting'],
+    connected: ['connected', 'Connected'],
+    failed: ['failed', 'Failed']
+  };
+  const [cls, label] = map[state] || ['', 'Disconnected'];
+  pill.className = 'pill' + (cls ? ' ' + cls : '');
+  pill.textContent = label;
+}
+
+function isBulkMode() {
+  return Boolean(document.getElementById('srcMigrateAll')?.checked);
+}
+
+function getSelectedBulkTypes() {
+  return Array.from(document.querySelectorAll('#srcObjectTypeChecks input[type="checkbox"]:checked'))
+    .map((input) => input.value);
+}
+
+function getObjectTypeLabel(type, side = 'src') {
+  if (type === 'trigger' && side === 'src' && APP.src.engine === 'snowflake') {
+    return 'Streams / Tasks';
+  }
+  return OBJECT_TYPE_LABELS[type] || type;
+}
+
+function formatObjectTypeLabel(type, side = 'src', count = null) {
+  const baseLabel = getObjectTypeLabel(type, side);
+  if (count === null || count === undefined) return baseLabel;
+  return `${baseLabel} (${count})`;
+}
+
+function renderObjectTypeChecks(summary) {
+  const wrap = document.getElementById('srcObjectTypeChecks');
+  if (!wrap) return;
+  wrap.innerHTML = Object.keys(OBJECT_TYPE_LABELS).map((key) => {
+    const count = Number(summary[key] || 0);
+    const disabled = count === 0 ? 'disabled' : '';
+    const cls = count === 0 ? 'object-check disabled' : 'object-check';
+    return `<label class="${cls}"><input type="checkbox" value="${key}" ${disabled} onchange="syncSourceSelectionMode(); updateMigrateBtn();"><div><strong>${getObjectTypeLabel(key, 'src')}</strong><span>${count} object(s)</span></div></label>`;
+  }).join('');
+}
+
+function getSelectedSingleObjects() {
+  return Array.from(document.querySelectorAll('#srcObjectChecks input[type="checkbox"]:checked'))
+    .map((input) => input.value);
+}
+
+function isMultiSelectObjectMode() {
+  return document.getElementById('srcObjectName')?.value === MULTI_SELECT_VALUE;
+}
+
+function renderSingleObjectChecks(items) {
+  const wrap = document.getElementById('srcObjectChecksWrap');
+  const grid = document.getElementById('srcObjectChecks');
+  if (!wrap || !grid) return;
+  const values = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!values.length || !isMultiSelectObjectMode()) {
+    wrap.style.display = 'none';
+    grid.innerHTML = '';
+    return;
+  }
+  wrap.style.display = 'block';
+  grid.innerHTML = values.map((name) => (
+    `<label class="object-check"><input type="checkbox" value="${escHtml(name)}" onchange="updateMigrateBtn()"><div><strong>${escHtml(name)}</strong><span>Include in migration</span></div></label>`
+  )).join('');
+}
+
+function onObjectNameSelectionChange() {
+  const cacheKey = `${document.getElementById('srcDatabase').value}::${document.getElementById('srcSchema').value}::${document.getElementById('srcObjectType').value}`;
+  renderSingleObjectChecks(APP.src.cache.objects[cacheKey] || []);
+  updateMigrateBtn();
+}
+
+function syncSourceSelectionMode() {
+  const bulkMode = isBulkMode();
+  const bulkWrap = document.getElementById('srcBulkTypeWrap');
+  const singleWrap = document.getElementById('srcSingleSelection');
+  const dataWrap = document.getElementById('srcMigrateDataWrap');
+  const dataHelp = document.getElementById('srcMigrateDataHelp');
+  const singleType = document.getElementById('srcObjectType').value;
+  const bulkTypes = getSelectedBulkTypes();
+  const bulkDataCapable = Number(APP.src.objectSummary.table || 0) > 0 || Number(APP.src.objectSummary.view || 0) > 0;
+  const dataSupported = bulkMode
+    ? bulkDataCapable
+    : singleType === 'table' || singleType === 'view';
+  const bulkDataSelected = bulkTypes.some((type) => type === 'table' || type === 'view');
+  const dataCheckbox = document.getElementById('srcMigrateData');
+  const dataLabel = dataWrap.querySelector('label');
+  const dataEnabled = bulkMode ? bulkDataSelected : dataSupported;
+
+  bulkWrap.style.display = bulkMode ? 'block' : 'none';
+  singleWrap.style.display = bulkMode ? 'none' : 'block';
+  dataWrap.style.display = dataSupported ? 'block' : 'none';
+  dataCheckbox.disabled = !dataEnabled;
+  dataLabel.style.opacity = dataEnabled ? '1' : '.65';
+  dataHelp.textContent = bulkMode
+    ? bulkTypes.some((type) => type === 'table' || type === 'view')
+      ? 'Bulk data copy is enabled for the selected Tables and Views.'
+      : 'Select Tables or Views above to enable bulk data copy.'
+    : 'Visible only for tables and views. When enabled, rows are copied after schema migration.';
+  if (!dataEnabled) {
+    dataCheckbox.checked = false;
+  }
+  syncDataModeState();
+}
+
+function toggleMigrateAll() {
+  syncSourceSelectionMode();
+  updateMigrateBtn();
+}
+
+  function syncDataModeState() {
+  const migrateData = document.getElementById('srcMigrateData');
+  const dataOnly = document.getElementById('srcDataOnly');
+  const dataMode = document.getElementById('srcDataMode');
+  const dataBatchSize = document.getElementById('srcDataBatchSize');
+  const dataOnlyWrap = document.getElementById('srcDataOnlyWrap');
+  const dataModeWrap = document.getElementById('srcDataModeWrap');
+  if (!migrateData || !dataOnly || !dataMode || !dataBatchSize) return;
+  const enabled = migrateData.checked && !migrateData.disabled;
+  dataOnlyWrap.style.display = enabled ? 'block' : 'none';
+  dataModeWrap.style.display = enabled ? 'block' : 'none';
+  dataOnly.disabled = !enabled;
+  dataMode.disabled = !enabled;
+  dataBatchSize.disabled = !enabled;
+  if (!enabled) {
+    dataOnly.checked = false;
+    dataMode.value = 'insert';
+    dataBatchSize.value = '1000';
+  }
+  }
+
+function setMigrateButtonLabel() {
+  const btn = document.getElementById('migrateBtn');
+  if (btn.dataset.loading === 'true') return;
+  btn.innerHTML = isBulkMode() ? BULK_LABEL : SINGLE_LABEL;
+}
+
+function resetPostConn(side) {
+  const sec = document.getElementById(side + 'PostConn');
+  if (sec) sec.style.display = 'none';
+  ['Database', 'Schema', 'ObjectType', 'ObjectName'].forEach((field) => {
+    const el = document.getElementById(side + field);
+    if (!el) return;
+    if (el.tagName === 'SELECT') {
+      el.innerHTML = `<option value="">-- Select ${field.toLowerCase()} --</option>`;
+      if (side === 'tgt' && (field === 'Database' || field === 'Schema')) {
+        const opt = document.createElement('option');
+        opt.value = SOURCE_DEFAULT_VALUE;
+        opt.textContent = SOURCE_DEFAULT_LABELS[field];
+        el.appendChild(opt);
+      }
+      if (field === 'ObjectType' && side === 'tgt') {
+        el.innerHTML = '<option value="">-- Existing objects in schema --</option>';
+      }
+      if (field === 'ObjectName') {
+        el.innerHTML = '<option value="">-- Select object name --</option>';
+      }
+      el.selectedIndex = 0;
+      el.disabled = field !== 'Database';
+    }
+    else if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+  });
+    if (side === 'src') {
+      APP.src.objectSummary = {};
+      document.getElementById('srcMigrateAll').checked = false;
+      document.getElementById('srcMigrateData').checked = false;
+      document.getElementById('srcDataOnly').checked = false;
+      document.getElementById('srcDataMode').value = 'insert';
+      document.getElementById('srcDataBatchSize').value = '1000';
+      document.getElementById('srcBulkTypeWrap').style.display = 'none';
+      document.getElementById('srcSingleSelection').style.display = 'block';
+      document.getElementById('srcMigrateDataWrap').style.display = 'none';
+      document.getElementById('srcObjectTypeChecks').innerHTML = '';
+      document.getElementById('srcObjectChecks').innerHTML = '';
+      document.getElementById('srcObjectChecksWrap').style.display = 'none';
+    }
+    if (side === 'tgt') {
+      document.getElementById('tgtTruncateBeforeLoad').checked = false;
+      document.getElementById('tgtDropAndCreateIfExists').checked = false;
+    }
+  APP[side].cache = { databases: null, schemas: {}, summaries: {}, objects: {} };
+  if (side === 'src') {
+    syncDataModeState();
+  }
+}
+
+function addSourceDefaultOption(selectId, field) {
+  if (!selectId.startsWith('tgt')) return;
+  const el = document.getElementById(selectId);
+  if (!el || Array.from(el.options).some((option) => option.value === SOURCE_DEFAULT_VALUE)) return;
+  const opt = document.createElement('option');
+  opt.value = SOURCE_DEFAULT_VALUE;
+  opt.textContent = SOURCE_DEFAULT_LABELS[field];
+  el.insertBefore(opt, el.options[1] || null);
+}
+
+function resolveDatabaseOrSchema(side, field, rawValue) {
+  if (side !== 'tgt' || rawValue !== SOURCE_DEFAULT_VALUE) return rawValue;
+  return document.getElementById(`src${field}`)?.value || '';
+}
+
+function getSelectedValue(side, field) {
+  const rawValue = document.getElementById(`${side}${field}`)?.value || '';
+  return resolveDatabaseOrSchema(side, field, rawValue);
+}
+
+async function syncTargetDefaultsFromSource(field) {
+  if (!APP.tgt.connected) return;
+  if (document.getElementById('tgtDatabase')?.value === SOURCE_DEFAULT_VALUE) {
+    await handleDatabaseChange('tgt');
+    if (field === 'Schema' && document.getElementById('tgtSchema')?.value === SOURCE_DEFAULT_VALUE) {
+      await handleSchemaChange('tgt');
+    }
+  }
+}
+
+function setSelectOptions(selectId, items, placeholder, formatter) {
+  const el = document.getElementById(selectId);
+  if (!el) return;
+  el.innerHTML = `<option value="">${placeholder}</option>`;
+  if (selectId === 'tgtDatabase') addSourceDefaultOption(selectId, 'Database');
+  if (selectId === 'tgtSchema') addSourceDefaultOption(selectId, 'Schema');
+  items.forEach((item) => {
+    const option = document.createElement('option');
+    if (typeof item === 'string') {
+      option.value = item;
+      option.textContent = formatter ? formatter(item) : item;
+    } else {
+      option.value = item.value;
+      option.textContent = formatter ? formatter(item) : item.label;
+    }
+    el.appendChild(option);
+  });
+}
+
+function handleEngineChange(side) {
+  const engine = document.getElementById(side + 'Engine').value;
+  APP[side].engine = engine;
+  APP[side].connected = false;
+  APP[side].selectedConnection = null;
+  updatePill(side, 'disconnected');
+  resetPostConn(side);
+  document.getElementById(side + 'ConnectionProfile').value = '';
+  const container = document.getElementById(side + 'DynFields');
+  container.innerHTML = '';
+  document.getElementById(side + 'TestBtn').disabled = true;
+  renderConnectionProfileOptions();
+  if (!engine) {
+    setMigrateButtonLabel();
+    updateMigrateBtn();
+    return;
+  }
+  log('info', `[${side.toUpperCase()}] Engine: ${DB_LABELS[engine] || engine}`);
+  if (!isEngineSupported(engine)) {
+    log('warn', `[${side.toUpperCase()}] This engine is not wired in the backend yet.`);
+    showToast('info', 'Limited Backend Support', 'This engine is not wired in the backend yet.');
+  }
+  setMigrateButtonLabel();
+  updateMigrateBtn();
+}
+
+function enablePostConn(side) {
+  document.getElementById(side + 'PostConn').style.display = 'block';
+  document.getElementById(side + 'Database').disabled = false;
+  document.getElementById(side + 'RefreshDbBtn').disabled = false;
+  updateMigrateBtn();
+}
+
+async function refreshDatabases(side) {
+  if (!APP[side].connected) return;
+  APP[side].cache = { databases: null, schemas: {}, summaries: {}, objects: {} };
+  const btn = document.getElementById(side + 'RefreshDbBtn');
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+  resetPostConn(side);
+  document.getElementById(side + 'PostConn').style.display = 'block';
+  document.getElementById(side + 'Database').disabled = false;
+  try {
+    await loadDatabases(side, true);
+    log('success', `[${side.toUpperCase()}] Database list refreshed.`);
+    showToast('success', 'Databases Refreshed', `${DB_LABELS[APP[side].engine]} databases reloaded.`);
+  } catch (err) {
+    log('error', `[${side.toUpperCase()}] ${err.message}`);
+    showToast('error', 'Refresh Failed', err.message);
+  } finally {
+    btn.innerHTML = original;
+    btn.disabled = false;
+    updateMigrateBtn();
+  }
+}
+
+async function loadDatabases(side, force = false) {
+  const engine = document.getElementById(side + 'Engine').value;
+  if (!force && APP[side].cache.databases) {
+    setSelectOptions(side + 'Database', APP[side].cache.databases, '-- Select database --');
+    document.getElementById(side + 'Database').disabled = false;
+    log('dim', `[${side.toUpperCase()}] Loaded databases from cache.`);
+    return;
+  }
+  const result = await postJson(`${API_BASE}/metadata/databases`, {
+    database_type: API_DB_TYPES[engine],
+    connection_details: getConnectionDetails(side, false)
+  });
+
+  if (result.status !== 'success') {
+    throw new Error(result.message || 'Could not load databases.');
+  }
+
+  APP[side].cache.databases = result.items || [];
+  setSelectOptions(side + 'Database', result.items || [], '-- Select database --');
+  document.getElementById(side + 'Database').disabled = false;
+  if (side === 'tgt') {
+    addSourceDefaultOption('tgtDatabase', 'Database');
+  }
+  log('info', `[${side.toUpperCase()}] Loaded ${result.items.length} databases.`);
+}
+
+async function handleDatabaseChange(side) {
+  const rawDatabase = document.getElementById(side + 'Database').value;
+  const database = getSelectedValue(side, 'Database');
+  setSelectOptions(side + 'Schema', [], '-- Select schema --');
+  document.getElementById(side + 'Schema').disabled = true;
+  setSelectOptions(side + 'ObjectType', [], side === 'tgt' ? '-- Existing objects in schema --' : '-- Select object type --');
+  document.getElementById(side + 'ObjectType').disabled = true;
+  if (side === 'src') {
+    APP.src.objectSummary = {};
+    document.getElementById('srcObjectTypeChecks').innerHTML = '';
+    setSelectOptions('srcObjectName', [], '-- Select object name --');
+    document.getElementById('srcObjectName').disabled = true;
+    document.getElementById('srcObjectChecks').innerHTML = '';
+    document.getElementById('srcObjectChecksWrap').style.display = 'none';
+    syncSourceSelectionMode();
+  }
+  if (!database) {
+    updateMigrateBtn();
+    return;
+  }
+
+  if (side === 'tgt' && rawDatabase === SOURCE_DEFAULT_VALUE) {
+    setSelectOptions('tgtSchema', [], '-- Select schema --');
+    addSourceDefaultOption('tgtSchema', 'Schema');
+    document.getElementById('tgtSchema').disabled = false;
+    document.getElementById('tgtSchema').value = SOURCE_DEFAULT_VALUE;
+    setSelectOptions('tgtObjectType', [], '-- Existing objects in schema --');
+    document.getElementById('tgtObjectType').disabled = true;
+    log('info', `[TGT] Using source database name "${database}" as target default. Skipping target schema lookup.`);
+    await handleSchemaChange('tgt');
+    updateMigrateBtn();
+    return;
+  }
+
+  try {
+    const cacheKey = `${rawDatabase || database}::${database}`;
+    let items = APP[side].cache.schemas[cacheKey];
+    if (!items) {
+      const result = await postJson(`${API_BASE}/metadata/schemas`, {
+        database_type: API_DB_TYPES[document.getElementById(side + 'Engine').value],
+        connection_details: getConnectionDetails(side, false),
+        database_name: database
+      });
+
+      if (result.status !== 'success') {
+        throw new Error(result.message || 'Could not load schemas.');
+      }
+      items = result.items || [];
+      APP[side].cache.schemas[cacheKey] = items;
+    } else {
+      log('dim', `[${side.toUpperCase()}] Loaded schemas for ${database} from cache.`);
+    }
+
+    setSelectOptions(side + 'Schema', items, '-- Select schema --');
+    document.getElementById(side + 'Schema').disabled = false;
+    if (side === 'tgt') {
+      addSourceDefaultOption('tgtSchema', 'Schema');
+      if (rawDatabase === SOURCE_DEFAULT_VALUE) {
+        document.getElementById('tgtSchema').value = SOURCE_DEFAULT_VALUE;
+        await handleSchemaChange('tgt');
+      }
+    }
+    log('info', `[${side.toUpperCase()}] Loaded ${items.length} schemas for ${database}.`);
+  } catch (err) {
+    log('error', `[${side.toUpperCase()}] ${err.message}`);
+    showToast('error', 'Schema Load Failed', err.message);
+  }
+
+  updateMigrateBtn();
+  if (side === 'src') {
+    await syncTargetDefaultsFromSource('Database');
+  }
+}
+
+async function handleSchemaChange(side) {
+  const rawDatabase = document.getElementById(side + 'Database').value;
+  const rawSchema = document.getElementById(side + 'Schema').value;
+  const database = getSelectedValue(side, 'Database');
+  const schema = getSelectedValue(side, 'Schema');
+  setSelectOptions(side + 'ObjectType', [], side === 'tgt' ? '-- Existing objects in schema --' : '-- Select object type --');
+  document.getElementById(side + 'ObjectType').disabled = true;
+  if (side === 'src') {
+    APP.src.objectSummary = {};
+    document.getElementById('srcObjectTypeChecks').innerHTML = '';
+    setSelectOptions('srcObjectName', [], '-- Select object name --');
+    document.getElementById('srcObjectName').disabled = true;
+    syncSourceSelectionMode();
+  }
+
+  if (!database || !schema) {
+    updateMigrateBtn();
+    return;
+  }
+
+  if (side === 'tgt' && (rawDatabase === SOURCE_DEFAULT_VALUE || rawSchema === SOURCE_DEFAULT_VALUE)) {
+    log('info', `[TGT] Using source schema name "${schema}" as target default. Skipping target object summary lookup.`);
+    updateMigrateBtn();
+    return;
+  }
+
+  try {
+    const cacheKey = `${database}::${schema}`;
+    let summary = APP[side].cache.summaries[cacheKey];
+    if (!summary) {
+      const result = await postJson(`${API_BASE}/metadata/object-summary`, {
+        database_type: API_DB_TYPES[document.getElementById(side + 'Engine').value],
+        connection_details: getConnectionDetails(side, false),
+        database_name: database,
+        schema_name: schema
+      });
+
+      if (result.status !== 'success') {
+        throw new Error(result.message || 'Could not load object summary.');
+      }
+      summary = result.items || {};
+      APP[side].cache.summaries[cacheKey] = summary;
+    } else {
+      log('dim', `[${side.toUpperCase()}] Loaded object counts for ${database}.${schema} from cache.`);
+    }
+
+    const items = Object.keys(OBJECT_TYPE_LABELS).map((key) => ({
+        value: key,
+      label: formatObjectTypeLabel(key, side, summary[key] || 0)
+      }));
+    setSelectOptions(
+      side + 'ObjectType',
+      items,
+      side === 'tgt' ? '-- Existing objects in schema --' : '-- Select object type --',
+      (item) => item.label
+    );
+    document.getElementById(side + 'ObjectType').disabled = false;
+    if (side === 'src') {
+      APP.src.objectSummary = summary;
+      renderObjectTypeChecks(APP.src.objectSummary);
+      syncSourceSelectionMode();
+    }
+    log('info', `[${side.toUpperCase()}] Loaded object counts for ${database}.${schema}.`);
+  } catch (err) {
+    log('error', `[${side.toUpperCase()}] ${err.message}`);
+    showToast('error', 'Object Summary Failed', err.message);
+  }
+
+  updateMigrateBtn();
+  if (side === 'src') {
+    await syncTargetDefaultsFromSource('Schema');
+  }
+}
+
+function onObjTypeChange(side) {
+  const type = document.getElementById(side + 'ObjectType').value;
+  if (side === 'src' && !document.getElementById('tgtObjectType').value) {
+    document.getElementById('tgtObjectType').value = type;
+  }
+  if (side === 'src') {
+    syncSourceSelectionMode();
+    loadObjectNames();
+  }
+  updateMigrateBtn();
+}
+
+async function loadObjectNames() {
+  const database = document.getElementById('srcDatabase').value;
+  const schema = document.getElementById('srcSchema').value;
+  const objectType = document.getElementById('srcObjectType').value;
+  setSelectOptions('srcObjectName', [], '-- Select object name --');
+  document.getElementById('srcObjectName').disabled = true;
+  renderSingleObjectChecks([]);
+
+  if (!database || !schema || !objectType) {
+    updateMigrateBtn();
+    return;
+  }
+
+  try {
+    const cacheKey = `${database}::${schema}::${objectType}`;
+    let items = APP.src.cache.objects[cacheKey];
+    if (!items) {
+      const result = await postJson(`${API_BASE}/metadata/objects`, {
+        database_type: API_DB_TYPES[document.getElementById('srcEngine').value],
+        connection_details: getConnectionDetails('src', false),
+        database_name: database,
+        schema_name: schema,
+        object_type: objectType
+      });
+
+      if (result.status !== 'success') {
+        throw new Error(result.message || 'Could not load object names.');
+      }
+      items = result.items || [];
+      APP.src.cache.objects[cacheKey] = items;
+    } else {
+      log('dim', `[SRC] Loaded ${objectType} objects from cache.`);
+    }
+
+    setSelectOptions('srcObjectName', [{ value: MULTI_SELECT_VALUE, label: 'Multi Select' }, ...items], '-- Select object name --');
+    document.getElementById('srcObjectName').disabled = false;
+    renderSingleObjectChecks([]);
+    log('info', `[SRC] Loaded ${items.length} ${objectType} objects.`);
+  } catch (err) {
+    log('error', `[SRC] ${err.message}`);
+    showToast('error', 'Object Load Failed', err.message);
+    renderSingleObjectChecks([]);
+  }
+
+  updateMigrateBtn();
+}
+
+function logObjectResult(result) {
+  const type = getObjectTypeLabel(result.object_type || '', 'src').toUpperCase();
+  const rows = Number(result.rows_migrated || 0);
+  const retryCount = Number(result.retry_count || 0);
+  const status = result.status === 'success' ? 'success' : result.status === 'skipped' ? 'warn' : 'error';
+  const suffix = [
+    rows > 0 ? `rows=${rows}` : '',
+    retryCount > 0 ? `retries=${retryCount}` : '',
+    result.error_type ? `type=${result.error_type}` : ''
+  ].filter(Boolean).join(' | ');
+  log(status, `[RESULT] ${type} ${result.object_name} -> ${result.status.toUpperCase()}${suffix ? ' | ' + suffix : ''}`);
+  if (result.error) {
+    log('error', `[RESULT] ${result.object_name}: ${result.error}`);
+  }
+  if (result.remediation) {
+    log(result.status === 'skipped' ? 'warn' : 'dim', `[RESULT] ${result.object_name} remediation: ${result.remediation}`);
+  }
+}
+
+function getConnectionDetails(side, includeDatabase, includeSchema = false) {
+  const engine = document.getElementById(side + 'Engine').value;
+  const details = { ...(APP[side].selectedConnection?.details || {}) };
+  if (includeDatabase) {
+    const database = getSelectedValue(side, 'Database');
+    if (database) details.database = database;
+  }
+  if (includeSchema) {
+    const schema = getSelectedValue(side, 'Schema');
+    if (schema) details.schema = schema;
+  }
+  return details;
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  let data = null;
+  try { data = await response.json(); } catch (_) { data = null; }
+  if (!response.ok) {
+    throw new Error(data?.detail ? JSON.stringify(data.detail) : `HTTP ${response.status}`);
+  }
+  return data;
+}
+
+async function postJsonStream(url, payload, onEvent) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok || !response.body) {
+    let data = null;
+    try { data = await response.json(); } catch (_) { data = null; }
+    throw new Error(data?.detail ? JSON.stringify(data.detail) : `HTTP ${response.status}`);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      onEvent(JSON.parse(trimmed));
+    }
+  }
+  if (buffer.trim()) {
+    onEvent(JSON.parse(buffer.trim()));
+  }
+}
+
+async function stopCurrentMigration() {
+  if (!APP.migration.active || !APP.migration.runId || APP.migration.stopRequested) return;
+  APP.migration.stopRequested = true;
+  updateExecutionControls();
+  try {
+    const result = await postJson(`${API_BASE}/migration-control/stop/${encodeURIComponent(APP.migration.runId)}`, {});
+    if (result.status !== 'success') {
+      throw new Error(result.message || 'Stop request failed.');
+    }
+    log('warn', `[MIGRATION] ${result.message}`);
+    showToast('info', 'Stop Requested', result.message);
+  } catch (err) {
+    APP.migration.stopRequested = false;
+    updateExecutionControls();
+    showToast('error', 'Stop Failed', err.message);
+  }
+}
+
+function resumeMigration() {
+  if (!APP.migration.resumeCheckpoint) {
+    showToast('info', 'No Checkpoint', 'There is no failed or stopped checkpoint to resume from.');
+    return;
+  }
+  log('info', `[MIGRATION] Resuming from ${APP.migration.resumeCheckpoint.object_type} ${APP.migration.resumeCheckpoint.object_name}`);
+  proceedMigrate(APP.migration.resumeCheckpoint);
+}
+
+async function getJson(url) {
+  const response = await fetch(url);
+  let data = null;
+  try { data = await response.json(); } catch (_) { data = null; }
+  if (!response.ok) {
+    throw new Error(data?.detail ? JSON.stringify(data.detail) : `HTTP ${response.status}`);
+  }
+  return data;
+}
+
+function renderHistoryMetrics(items) {
+  const host = document.getElementById('historyMetrics');
+  if (!items.length) {
+    host.innerHTML = '';
+    return;
+  }
+  const totals = items.reduce((acc, item) => {
+    const stats = item?.run_summary?.stats || {};
+    acc.runs += 1;
+    acc.objects += Number(stats.total_objects || 0);
+    acc.success += Number(stats.success_objects || 0);
+    acc.error += Number(stats.error_objects || 0);
+    acc.rows += Number(stats.total_rows_migrated || 0);
+    return acc;
+  }, { runs: 0, objects: 0, success: 0, error: 0, rows: 0 });
+  host.innerHTML = [
+    ['Runs', totals.runs],
+    ['Objects', totals.objects],
+    ['Success', totals.success],
+    ['Errors', totals.error],
+    ['Rows', totals.rows]
+  ].map(([label, value]) => `
+    <div class="metric-card">
+      <div class="metric-label">${escHtml(label)}</div>
+      <div class="metric-value">${escHtml(value)}</div>
+    </div>
+  `).join('');
+}
+
+function renderHistoryList(items) {
+  const host = document.getElementById('historyList');
+  if (!items.length) {
+    host.innerHTML = '<div class="history-empty">No migration runs stored yet.</div>';
+    return;
+  }
+  host.innerHTML = items.map((item) => {
+    const run = item.run_summary || {};
+    const stats = run.stats || {};
+    const selected = APP.history.selectedRunId === run.run_id ? ' active' : '';
+    const duration = fmtDuration(run.started_at, run.completed_at);
+    return `
+      <button type="button" class="history-item${selected}" onclick="selectHistoryRun('${escHtml(run.run_id || '')}')">
+        <div class="history-item-top">
+          <div class="history-run-id">${escHtml(run.run_id || 'unknown-run')}</div>
+          <div class="history-status ${getStatusClass(run.status)}">${escHtml(run.status || 'unknown')}</div>
+        </div>
+        <div class="history-meta">${escHtml(run.source_db || '--')} -> ${escHtml(run.target_db || '--')}</div>
+        <div class="history-meta">Start: ${escHtml(fmtDateTime(run.started_at))} | End: ${escHtml(fmtDateTime(run.completed_at))} | Duration: ${escHtml(duration)}</div>
+        <div class="history-item-bottom">
+          <div class="history-object-line">${escHtml(summarizeByType(stats.by_type) || 'No object counters')}</div>
+          <div class="history-meta">objects=${escHtml(stats.total_objects || 0)} rows=${escHtml(stats.total_rows_migrated || 0)}</div>
+        </div>
+      </button>
+    `;
+  }).join('');
+}
+
+function renderHistoryDetail(record) {
+  const body = document.getElementById('historyDetailBody');
+  const badge = document.getElementById('historyDetailStatus');
+  APP.history.selectedRecord = record || null;
+  if (!record) {
+    badge.className = 'history-status status-skipped';
+    badge.textContent = 'Idle';
+    body.innerHTML = '<div class="history-empty">Select a migration run to inspect its full details.</div>';
+    return;
+  }
+  const run = record.run_summary || {};
+  const stats = run.stats || {};
+  const allObjectResults = run.object_results || [];
+  const objectResults = APP.history.errorOnly
+    ? allObjectResults.filter((item) => item.status === 'error')
+    : allObjectResults;
+  const errorResults = allObjectResults.filter((item) => item.status === 'error');
+  badge.className = `history-status ${getStatusClass(run.status)}`;
+  badge.textContent = String(run.status || 'unknown').toUpperCase();
+  body.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-kv">
+        <div class="detail-box"><strong>Run ID</strong><div class="detail-code">${escHtml(run.run_id || '--')}</div></div>
+        <div class="detail-box"><strong>Window</strong><div class="detail-code">${escHtml(fmtDateTime(run.started_at))} to ${escHtml(fmtDateTime(run.completed_at))}</div></div>
+        <div class="detail-box"><strong>Duration</strong><div class="detail-code">${escHtml(fmtDuration(run.started_at, run.completed_at))}</div></div>
+        <div class="detail-box"><strong>Source -> Target</strong><div class="detail-code">${escHtml(run.source_db || '--')} -> ${escHtml(run.target_db || '--')}</div></div>
+        <div class="detail-box"><strong>Execution Order</strong><div class="detail-code">${escHtml((run.execution_order || []).join(' -> ') || '--')}</div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Run Totals</div>
+      <div class="detail-stats">
+        <div class="metric-card"><div class="metric-label">Objects</div><div class="metric-value">${escHtml(stats.total_objects || 0)}</div></div>
+        <div class="metric-card"><div class="metric-label">Success</div><div class="metric-value">${escHtml(stats.success_objects || 0)}</div></div>
+        <div class="metric-card"><div class="metric-label">Errors</div><div class="metric-value">${escHtml(stats.error_objects || 0)}</div></div>
+        <div class="metric-card"><div class="metric-label">Skipped</div><div class="metric-value">${escHtml(stats.skipped_objects || 0)}</div></div>
+        <div class="metric-card"><div class="metric-label">Rows</div><div class="metric-value">${escHtml(stats.total_rows_migrated || 0)}</div></div>
+        <div class="metric-card"><div class="metric-label">Retries</div><div class="metric-value">${escHtml(stats.total_retries || 0)}</div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Objects ${APP.history.errorOnly ? '(Errors Only)' : ''}</div>
+      <div class="detail-table">
+        ${objectResults.length ? objectResults.map((item) => `
+          <div class="detail-row">
+            <div>${escHtml(item.object_type || '--')} :: ${escHtml(item.object_name || '--')}</div>
+            <div class="detail-chip">${escHtml(item.retry_count || 0)} retry</div>
+            <div class="detail-chip">${escHtml(item.rows_migrated || 0)} rows</div>
+            <div class="detail-chip">${escHtml(fmtDuration(item.started_at, item.completed_at))}</div>
+            <div class="detail-status ${getStatusClass(item.status)}">${escHtml(item.status || 'unknown')}</div>
+          </div>
+        `).join('') : `<div class="history-empty">${APP.history.errorOnly ? 'No error objects in this run.' : 'No object results recorded.'}</div>`}
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Error Summary</div>
+      <div class="detail-table">
+        ${errorResults.length ? errorResults.map((item) => `
+          <div class="detail-box">
+            <strong>${escHtml(item.object_type || '--')} :: ${escHtml(item.object_name || '--')}</strong>
+            <div class="detail-code">${escHtml(item.error_message || item.remediation || 'No error message stored.')}</div>
+          </div>
+        `).join('') : '<div class="history-empty">This run has no recorded errors.</div>'}
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Stored Logs</div>
+      <div class="detail-box"><div class="history-log-box">${escHtml((record.logs || []).join('\n') || 'No logs stored.')}</div></div>
+    </div>
+  `;
+}
+
+async function selectHistoryRun(runId) {
+  APP.history.selectedRunId = runId;
+  renderHistoryList(APP.history.pagedItems);
+  renderHistoryDetail(null);
+  try {
+    const result = await getJson(`${API_BASE}/migration-history/${encodeURIComponent(runId)}`);
+    if (result.status !== 'success') {
+      throw new Error(result.message || 'Could not load migration run.');
+    }
+    renderHistoryDetail(result.item);
+  } catch (err) {
+    renderHistoryDetail(null);
+    log('error', `[HISTORY] ${err.message}`);
+    showToast('error', 'History Load Failed', err.message);
+  }
+}
+
+async function loadMigrationHistory() {
+  try {
+    const result = await getJson(`${API_BASE}/migration-history?limit=20`);
+    if (result.status !== 'success') {
+      throw new Error(result.message || 'Could not load migration history.');
+    }
+    APP.history.items = result.items || [];
+    populateHistoryTypeFilter(APP.history.items);
+    if (!APP.history.selectedRunId && APP.history.items.length) {
+      APP.history.selectedRunId = APP.history.items[0]?.run_summary?.run_id || '';
+    }
+    APP.history.filteredItems = sortHistoryItems(
+      filterHistoryItems(APP.history.items, APP.history.filters),
+      APP.history.filters.sort
+    );
+    const paged = paginateHistoryItems(
+      APP.history.filteredItems,
+      APP.history.page,
+      APP.history.filters.pageSize
+    );
+    APP.history.page = paged.page;
+    APP.history.totalPages = paged.totalPages;
+    APP.history.pagedItems = paged.items;
+    renderHistoryMetrics(APP.history.filteredItems);
+    renderHistoryList(APP.history.pagedItems);
+    updateHistoryPaginationInfo(APP.history.filteredItems.length);
+    if (APP.history.selectedRunId && APP.history.filteredItems.some((item) => item?.run_summary?.run_id === APP.history.selectedRunId)) {
+      await selectHistoryRun(APP.history.selectedRunId);
+    } else if (APP.history.filteredItems.length) {
+      APP.history.selectedRunId = APP.history.filteredItems[0]?.run_summary?.run_id || '';
+      await selectHistoryRun(APP.history.selectedRunId);
+    } else {
+      APP.history.selectedRunId = '';
+      renderHistoryDetail(null);
+    }
+    log('dim', `[HISTORY] Loaded ${APP.history.items.length} migration run(s).`);
+  } catch (err) {
+    APP.history.filteredItems = [];
+    APP.history.pagedItems = [];
+    APP.history.page = 1;
+    APP.history.totalPages = 1;
+    renderHistoryMetrics([]);
+    renderHistoryList([]);
+    updateHistoryPaginationInfo(0);
+    renderHistoryDetail(null);
+    log('error', `[HISTORY] ${err.message}`);
+  }
+}
+
+async function testConn(side) {
+  if (!ensureMigrationOperation()) return;
+  if (!validateSide(side)) {
+    log('error', `[${side.toUpperCase()}] Validation failed.`);
+    return;
+  }
+  const engine = document.getElementById(side + 'Engine').value;
+  if (!isEngineSupported(engine)) {
+    updatePill(side, 'failed');
+    return;
+  }
+  const btn = document.getElementById(side + 'TestBtn');
+  const original = btn.innerHTML;
+  const host = APP[side].selectedConnection?.name || 'saved-connection';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Connecting...';
+  updatePill(side, 'connecting');
+  log('info', `[${side.toUpperCase()}] Connecting to ${DB_LABELS[engine]} @ ${host}...`);
+  try {
+    APP[side].cache = { databases: null, schemas: {}, summaries: {}, objects: {} };
+    const result = await postJson(`${API_BASE}/test-connection`, {
+      database_type: API_DB_TYPES[engine],
+      connection_details: getConnectionDetails(side, false)
+    });
+    btn.innerHTML = original;
+    btn.disabled = false;
+    if (result.status === 'success') {
+      log('success', `[${side.toUpperCase()}] Connection test passed.`);
+      APP[side].connected = true;
+      updatePill(side, 'connected');
+      enablePostConn(side);
+      log('info', `[${side.toUpperCase()}] Loading database metadata...`);
+      await loadDatabases(side);
+      log('success', `[${side.toUpperCase()}] Connection successful.`);
+      showToast('success', 'Connected', `${DB_LABELS[engine]} connection established.`);
+    } else {
+      APP[side].connected = false;
+      updatePill(side, 'failed');
+      resetPostConn(side);
+      document.getElementById(side + 'RefreshDbBtn').disabled = true;
+      log('error', `[${side.toUpperCase()}] ${result.message}`);
+      if (result.debug) {
+        String(result.debug).split('\n').filter(Boolean).forEach((line) => {
+          log('dim', `[${side.toUpperCase()}] ${line}`);
+        });
+      }
+      showToast('error', 'Connection Failed', result.message || 'Could not reach the database.');
+    }
+  } catch (err) {
+    btn.innerHTML = original;
+    btn.disabled = false;
+    APP[side].connected = false;
+    updatePill(side, 'failed');
+    resetPostConn(side);
+    document.getElementById(side + 'RefreshDbBtn').disabled = true;
+    log('error', `[${side.toUpperCase()}] ${err.message}`);
+    showToast('error', 'Connection Failed', err.message);
+  }
+  updateMigrateBtn();
+}
+
+function updateMigrateBtn() {
+  const btn = document.getElementById('migrateBtn');
+  const title = document.getElementById('actionTitle');
+  const sub = document.getElementById('actionSub');
+  const bulkMode = isBulkMode();
+  const multiSelectEnabled = isMultiSelectObjectMode();
+  const checkedSingleObjects = multiSelectEnabled ? getSelectedSingleObjects() : [];
+  setMigrateButtonLabel();
+  if (!CAN_OPERATE_MIGRATIONS) {
+    btn.disabled = true;
+    title.textContent = 'Viewer Access';
+    sub.textContent = 'This role can inspect the migration workspace and history but cannot run or modify migrations.';
+    return;
+  }
+  if (!APP.src.connected) {
+    btn.disabled = true;
+    title.textContent = 'Source Not Connected';
+    sub.textContent = 'Test source connection to continue.';
+    return;
+  }
+  if (!APP.tgt.connected) {
+    btn.disabled = true;
+    title.textContent = 'Target Not Connected';
+    sub.textContent = 'Test target connection to continue.';
+    return;
+  }
+  if (!getSelectedValue('src', 'Database') ||
+      !getSelectedValue('src', 'Schema') ||
+      !getSelectedValue('tgt', 'Database') ||
+      !getSelectedValue('tgt', 'Schema')) {
+    btn.disabled = true;
+    title.textContent = 'Complete Migration Details';
+    sub.textContent = 'Select source and target database/schema values from the metadata dropdowns.';
+    return;
+  }
+  if (bulkMode && !getSelectedBulkTypes().length) {
+    btn.disabled = true;
+    title.textContent = 'Choose Bulk Object Types';
+    sub.textContent = 'Select at least one object-type checkbox for Migrate All.';
+    return;
+  }
+  if (!bulkMode && (!document.getElementById('srcObjectType').value || !document.getElementById('srcObjectName').value || (multiSelectEnabled && !checkedSingleObjects.length))) {
+    btn.disabled = true;
+    title.textContent = 'Select Single Object';
+    sub.textContent = multiSelectEnabled
+      ? 'Choose one or more object names from the checkbox list.'
+      : 'Choose one source object type and one object name for single migration.';
+    return;
+  }
+  btn.disabled = false;
+  title.textContent = bulkMode ? 'Ready for Bulk Migration' : multiSelectEnabled ? 'Ready for Multi-Object Migration' : 'Ready to Migrate';
+  sub.textContent = bulkMode
+    ? 'Both connections active. Run the ordered bulk migration with per-object tracking.'
+    : multiSelectEnabled
+      ? `Both connections active. ${checkedSingleObjects.length} selected object(s) from the current type will be migrated.`
+      : 'Both connections active. Run the single-object agent migration.';
+}
+
+async function proceedMigrate(resumeCheckpoint = null) {
+  if (!ensureMigrationOperation()) return;
+  const bulkMode = isBulkMode();
+  const srcDb = getSelectedValue('src', 'Database');
+  const srcSchema = getSelectedValue('src', 'Schema');
+  const srcType = document.getElementById('srcObjectType').value;
+  const srcObjectName = document.getElementById('srcObjectName').value;
+  const multiSelectEnabled = isMultiSelectObjectMode();
+  const checkedSingleObjects = multiSelectEnabled ? getSelectedSingleObjects() : [];
+  const multiObjectMode = !bulkMode && multiSelectEnabled;
+  const tgtDb = getSelectedValue('tgt', 'Database');
+  const tgtSchema = getSelectedValue('tgt', 'Schema');
+  const tgtType = document.getElementById('tgtObjectType').value || srcType;
+  const migrateData = document.getElementById('srcMigrateData').checked;
+  const dataOnly = document.getElementById('srcDataOnly').checked;
+  const dataMode = document.getElementById('srcDataMode').value;
+  const dataBatchSize = Number(document.getElementById('srcDataBatchSize').value || 1000);
+  const truncateBeforeLoad = document.getElementById('tgtTruncateBeforeLoad').checked;
+  const dropAndCreateIfExists = document.getElementById('tgtDropAndCreateIfExists').checked;
+  const bulkTypes = getSelectedBulkTypes();
+  const btn = document.getElementById('migrateBtn');
+  if (!srcDb || !srcSchema || !tgtDb || !tgtSchema) {
+    showToast('error', 'Missing Fields', 'Complete the required migration fields.');
+    return;
+  }
+  if (!bulkMode && (!srcType || !srcObjectName || (multiSelectEnabled && !checkedSingleObjects.length))) {
+    showToast('error', 'Missing Fields', multiSelectEnabled
+      ? 'Choose one or more object names from the checkbox list.'
+      : 'Select one object type and one object name.');
+    return;
+  }
+  if (bulkMode && !bulkTypes.length) {
+    showToast('error', 'Missing Fields', 'Select at least one object-type checkbox.');
+    return;
+  }
+  if (resumeCheckpoint && !bulkMode) {
+    showToast('info', 'Resume Not Needed', 'Resume is supported for bulk migrations. Single-object migration can be rerun directly.');
+    resumeCheckpoint = null;
+  }
+  btn.disabled = true;
+  btn.dataset.loading = 'true';
+  btn.innerHTML = '<span class="spin"></span> Migrating...';
+  APP.migration.active = true;
+  APP.migration.runId = '';
+  APP.migration.stopRequested = false;
+  updateExecutionControls();
+  log('dim', '==========================================');
+  log('blue', `[MIGRATION] Job started - ${new Date().toLocaleString()}`);
+  log('info', `[MIGRATION] Source : ${DB_LABELS[APP.src.engine]} -> ${srcDb}.${srcSchema}`);
+  log('info', `[MIGRATION] Target : ${DB_LABELS[APP.tgt.engine]} -> ${tgtDb}.${tgtSchema}`);
+  if (bulkMode) {
+    log('info', `[MIGRATION] Scope  : ${bulkTypes.map((type) => getObjectTypeLabel(type, 'src')).join(', ')}`);
+  } else if (multiObjectMode) {
+    log('info', `[MIGRATION] Type   : ${getObjectTypeLabel(srcType, 'src')}`);
+    log('info', `[MIGRATION] Scope  : ${checkedSingleObjects.length} selected object(s)`);
+    log('info', `[MIGRATION] Target : ${getObjectTypeLabel(tgtType, 'tgt')}`);
+  } else {
+    log('info', `[MIGRATION] Type   : ${getObjectTypeLabel(srcType, 'src')}`);
+    log('info', `[MIGRATION] Object : ${srcObjectName}`);
+    log('info', `[MIGRATION] Target : ${getObjectTypeLabel(tgtType, 'tgt')}`);
+  }
+  log('info', `[MIGRATION] Mode   : ${dataOnly ? `Data only (${dataMode})` : migrateData ? `Schema + Data (${dataMode})` : 'Schema only'}`);
+  if (migrateData) log('info', `[MIGRATION] Load   : ${truncateBeforeLoad ? 'Truncate before load' : 'Append / merge existing target data'}`);
+  if (!dataOnly) log('info', `[MIGRATION] Target DDL : ${dropAndCreateIfExists ? 'Drop and recreate target table when it already exists' : 'Create / validate target object normally'}`);
+  if (migrateData) log('info', `[MIGRATION] Batch  : ${dataBatchSize} row(s) per batch`);
+  if (resumeCheckpoint) log('warn', `[MIGRATION] Resume : ${resumeCheckpoint.object_type} ${resumeCheckpoint.object_name}`);
+  log('dim', '==========================================');
+  try {
+    const payload = {
+      source_config: {
+        database_type: API_DB_TYPES[APP.src.engine],
+        connection_details: getConnectionDetails('src', true, true)
+      },
+      target_config: {
+        database_type: API_DB_TYPES[APP.tgt.engine],
+        connection_details: getConnectionDetails('tgt', true, true)
+      },
+      migrate_data: migrateData,
+      data_only: dataOnly,
+      data_migration_mode: dataMode,
+      data_batch_size: dataBatchSize,
+      truncate_before_load: truncateBeforeLoad,
+      drop_and_create_if_exists: dropAndCreateIfExists
+    };
+    let result = null;
+    await postJsonStream(
+      (bulkMode || multiObjectMode) ? `${API_BASE}/agent-migrate/bulk/stream` : `${API_BASE}/agent-migrate/stream`,
+          (bulkMode || multiObjectMode)
+        ? {
+            ...payload,
+            object_types: bulkMode ? bulkTypes : [srcType],
+            selected_objects: multiObjectMode ? { [srcType]: checkedSingleObjects } : undefined,
+            continue_on_error: true,
+            resume_from: resumeCheckpoint || undefined
+          }
+        : {
+            ...payload,
+            object_type: srcType,
+            object_name: srcObjectName
+          },
+      (event) => {
+        if (event.type === 'meta' && event.run_id) {
+          APP.migration.runId = event.run_id;
+          updateExecutionControls();
+          log('dim', `[MIGRATION] Run ID : ${event.run_id}`);
+        }
+        if (event.type === 'log' && event.message) {
+          log(inferLogType(event.message), event.message);
+        }
+        if (event.type === 'final') {
+          result = event.data;
+        }
+      }
+    );
+    if (!result) {
+      throw new Error('Migration stream ended without a final result.');
+    }
+    if (bulkMode || multiObjectMode) {
+      if (result.execution_order?.length) {
+        log('blue', `[MIGRATION] Execution order: ${result.execution_order.join(' -> ')}`);
+      }
+      (result.results || []).forEach(logObjectResult);
+      const summary = result.summary || {};
+      const summaryLabel = `Completed ${summary.success || 0}/${summary.total || 0} objects | skipped=${summary.skipped || 0} | errors=${summary.error || 0}`;
+      if (result.status === 'success') {
+        showToast('success', multiObjectMode ? 'Selected Objects Migration Complete' : 'Bulk Migration Complete', summaryLabel);
+      } else if (result.status === 'partial') {
+        showToast('info', multiObjectMode ? 'Selected Objects Migration Partial' : 'Bulk Migration Partial', summaryLabel);
+      } else if (result.status === 'stopped') {
+        showToast('info', multiObjectMode ? 'Selected Objects Migration Stopped' : 'Bulk Migration Stopped', summaryLabel);
+      } else {
+        showToast('error', multiObjectMode ? 'Selected Objects Migration Failed' : 'Bulk Migration Failed', summaryLabel);
+      }
+    } else {
+      if (result.object_result) {
+        logObjectResult(result.object_result);
+      }
+      if (result.transformed_sql) {
+        log('dim', '--- transformed sql ---');
+        log('info', result.transformed_sql);
+      }
+      if (result.status === 'success') {
+        showToast('success', 'Migration Complete', `${srcObjectName} migrated successfully.`);
+      } else {
+        showToast('error', 'Migration Failed', 'Backend returned an error status.');
+      }
+    }
+    if (result.run_summary) {
+      updateLatestRunSummary(result.run_summary);
+    }
+    if (result.resume_checkpoint && ['partial', 'error', 'stopped'].includes(result.status)) {
+      setResumeCheckpoint(result.resume_checkpoint);
+    } else if (result.status === 'success') {
+      setResumeCheckpoint(null);
+    }
+  } catch (err) {
+    log('error', `[MIGRATION] ${err.message}`);
+    showToast('error', 'Migration Failed', err.message);
+  } finally {
+    APP.migration.active = false;
+    APP.migration.runId = '';
+    APP.migration.stopRequested = false;
+    updateExecutionControls();
+    btn.dataset.loading = 'false';
+    btn.disabled = false;
+    setMigrateButtonLabel();
+  }
+}
+
+function resetAll() {
+  if (!ensureMigrationOperation()) return;
+  ['src', 'tgt'].forEach((side) => {
+    document.getElementById(side + 'Engine').value = '';
+    document.getElementById(side + 'ConnectionProfile').value = '';
+    document.getElementById(side + 'DynFields').innerHTML = '';
+    document.getElementById(side + 'TestBtn').disabled = true;
+    APP[side].connected = false;
+    APP[side].engine = '';
+    APP[side].selectedConnection = null;
+    document.getElementById(side + 'RefreshDbBtn').disabled = true;
+    updatePill(side, 'disconnected');
+    resetPostConn(side);
+  });
+  APP.migration.active = false;
+  APP.migration.runId = '';
+  APP.migration.stopRequested = false;
+  updateMigrateBtn();
+  updateExecutionControls();
+  log('dim', '[SYSTEM] Configuration reset.');
+}
+
+log('dim', '[SYSTEM] Database Object Migrator initialized.');
+renderConnectionProfileOptions();
+initTheme();
+loadResumeCheckpoint();
+setMigrateButtonLabel();
+syncSourceSelectionMode();
+log('dim', `[SYSTEM] FastAPI endpoints: ${API_BASE}/agent-migrate and ${API_BASE}/agent-migrate/bulk`);
+log('dim', '[SYSTEM] Dedicated history view: migration-history.html');
+log('dim', '[SYSTEM] Backend currently supports MySQL, SQL Server, PostgreSQL-family, and Snowflake.');
+log('dim', '[SYSTEM] Snowflake accepts either account identifier or full hostname.');
+updateLatestRunSummary(null);
+updateExecutionControls();
+if (!CAN_MANAGE_CONNECTIONS) {
+  document.querySelectorAll('a[href="connection-manager.html"]').forEach((link) => {
+    link.style.display = 'none';
+  });
+}
+if (IS_VIEW_ONLY) {
+  [
+    'srcEngine', 'srcConnectionProfile', 'srcDatabase', 'srcSchema', 'srcObjectType', 'srcObjectName',
+    'srcMigrateAll', 'srcMigrateData', 'srcDataOnly', 'srcDataMode', 'srcDataBatchSize',
+    'tgtEngine', 'tgtConnectionProfile', 'tgtDatabase', 'tgtSchema', 'tgtObjectType',
+    'tgtTruncateBeforeLoad', 'tgtDropAndCreateIfExists',
+    'srcTestBtn', 'tgtTestBtn', 'migrateBtn'
+  ].forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.disabled = true;
+    }
+  });
+  document.querySelectorAll('#srcBulkTypeGrid input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.disabled = true;
+  });
+}
+</script>
+</body>
+</html>

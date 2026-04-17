@@ -1,0 +1,126 @@
+# RAG knowledge mapping
+# Use this file only for AI context and examples.
+# Do not add regex pattern/replacement rules here.
+#
+# Preferred section order:
+# metadata
+# datatypes
+# functions
+# numeric_functions
+# date_functions
+# query
+# joins
+# operators
+# transactions
+# procedural
+# procedures
+# views
+# known_issues
+# examples
+
+metadata:
+  source: "snowflake"
+  target: "mysql"
+  version: "1.0"
+
+datatypes:
+  - source: "INTEGER"
+    target: "INT"
+
+  - source: "BOOLEAN"
+    target: "TINYINT(1)"
+
+  - source: "STRING"
+    target: "TEXT"
+
+  - source: "TIMESTAMP"
+    target: "DATETIME"
+
+  - source: "VARIANT"
+    target: "JSON"
+
+  - source: "NUMBER"
+    target: "DECIMAL"
+
+  - source: "VARCHAR"
+    target: "VARCHAR(n) or TEXT"
+
+  - source: "TIMESTAMP_NTZ"
+    target: "DATETIME"
+
+functions:
+  - source: "CURRENT_TIMESTAMP()"
+    target: "NOW()"
+
+  - source: "CURRENT_DATE()"
+    target: "CURDATE()"
+
+  - source: "COALESCE({a},{b})"
+    target: "IFNULL({a},{b})"
+
+  - source: "{a} || {b}"
+    target: "CONCAT({a},{b})"
+
+numeric_functions:
+  - source: "CEILING({col})"
+    target: "CEIL({col})"
+
+date_functions:
+  - source: "DATEADD(day, {n}, {date})"
+    target: "DATE_ADD({date}, INTERVAL {n} DAY)"
+
+query:
+  - source: "FETCH FIRST {n} ROWS ONLY"
+    target: "LIMIT {n}"
+
+  - source: "\"{col}\""
+    target: "`{col}`"
+
+  - source: "MERGE INTO"
+    target: "INSERT ... ON DUPLICATE KEY UPDATE"
+
+joins:
+  - source: "INNER JOIN"
+    target: "INNER JOIN"
+
+operators:
+  - source: "<>"
+    target: "!="
+
+transactions: []
+
+procedural: []
+
+procedures:
+  - source: "Snowflake SQL procedure AS $$ ... $$"
+    target: "MySQL CREATE PROCEDURE ... BEGIN ... END"
+    notes: "Remove LANGUAGE and EXECUTE AS clauses and convert body syntax."
+
+  - source: "Snowflake JavaScript procedure with snowflake.createStatement"
+    target: "MySQL procedure body containing the SQL statement"
+    notes: "Simple sqlText bodies can be extracted; complex JavaScript requires manual rewrite."
+
+views: []
+
+known_issues:
+  - issue: "QUALIFY not supported"
+    fix: "Rewrite using subquery"
+
+  - issue: "VARIANT not fully supported"
+    fix: "Use JSON"
+
+  - issue: "MERGE not supported in older MySQL"
+    fix: "Use INSERT ON DUPLICATE KEY UPDATE"
+
+  - issue: "RESULTSET not supported"
+    fix: "Use CURSOR"
+
+  - issue: "Snowflake procedures differ"
+    fix: "Rewrite using MySQL BEGIN...END"
+
+examples:
+  - input: "SELECT * FROM users FETCH FIRST 5 ROWS ONLY"
+    output: "SELECT * FROM users LIMIT 5"
+
+  - input: "SELECT \"ID\" FROM \"USERS\" FETCH FIRST 5 ROWS ONLY"
+    output: "SELECT `ID` FROM `USERS` LIMIT 5"

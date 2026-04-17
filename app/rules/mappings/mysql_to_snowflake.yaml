@@ -1,0 +1,100 @@
+# Rule engine mapping
+# Use this file only for deterministic regex post-processing rules.
+# Each rule must define pattern and replacement.
+# Do not add RAG knowledge, examples, or AI-only notes here.
+
+- name: snowflake_auto_increment_keyword
+  pattern: "(?is)\\bauto_increment\\b"
+  replacement: "AUTOINCREMENT"
+  flags: "is"
+  description: "Convert MySQL AUTO_INCREMENT keyword to Snowflake AUTOINCREMENT."
+
+- name: snowflake_remove_mysql_engine_clause
+  pattern: "(?is)\\s+engine\\s*=\\s*\\w+"
+  replacement: ""
+  flags: "is"
+  description: "Remove MySQL table ENGINE clauses because Snowflake does not support them."
+
+- name: snowflake_remove_mysql_charset_clause
+  pattern: "(?is)\\s+default\\s+charset\\s*=\\s*\\w+"
+  replacement: ""
+  flags: "is"
+  description: "Remove MySQL DEFAULT CHARSET table options for Snowflake."
+
+- name: snowflake_remove_mysql_collate_clause
+  pattern: "(?is)\\s+collate\\s*=\\s*[\\w_]+"
+  replacement: ""
+  flags: "is"
+  description: "Remove MySQL COLLATE table options for Snowflake."
+
+- name: snowflake_now_function
+  pattern: "(?is)\\bnow\\s*\\(\\s*\\)"
+  replacement: "CURRENT_TIMESTAMP()"
+  flags: "is"
+  description: "Map MySQL NOW() to Snowflake CURRENT_TIMESTAMP()."
+
+- name: snowflake_curdate_function
+  pattern: "(?is)\\bcurdate\\s*\\(\\s*\\)"
+  replacement: "CURRENT_DATE()"
+  flags: "is"
+  description: "Map MySQL CURDATE() to Snowflake CURRENT_DATE()."
+
+- name: snowflake_ifnull_function
+  pattern: "(?is)\\bifnull\\s*\\("
+  replacement: "COALESCE("
+  flags: "is"
+  description: "Map MySQL IFNULL to Snowflake COALESCE."
+
+- name: snowflake_substring_function
+  pattern: "(?is)\\bsubstring\\s*\\("
+  replacement: "SUBSTR("
+  flags: "is"
+  description: "Map MySQL SUBSTRING to Snowflake SUBSTR."
+
+- name: snowflake_ceil_function
+  pattern: "(?is)\\bceil\\s*\\("
+  replacement: "CEILING("
+  flags: "is"
+  description: "Map MySQL CEIL to Snowflake CEILING."
+
+- name: snowflake_not_equal_operator
+  pattern: "!="
+  replacement: "<>"
+  flags: ""
+  description: "Normalize MySQL not-equal operator to Snowflake-preferred <>."
+
+- name: snowflake_limit_to_fetch_first
+  pattern: "(?is)\\blimit\\s+(\\d+)\\b"
+  replacement: "FETCH FIRST \\1 ROWS ONLY"
+  flags: "is"
+  description: "Convert MySQL LIMIT n to Snowflake FETCH FIRST n ROWS ONLY."
+
+- name: snowflake_start_transaction
+  pattern: "(?is)\\bstart\\s+transaction\\b"
+  replacement: "BEGIN"
+  flags: "is"
+  description: "Convert MySQL START TRANSACTION to Snowflake BEGIN."
+
+- name: snowflake_remove_mysql_algorithm_clause
+  pattern: "(?is)\\bcreate\\s+algorithm\\s*=\\s*\\w+\\s+"
+  replacement: "CREATE "
+  flags: "is"
+  description: "Remove MySQL ALGORITHM clause from CREATE VIEW statements."
+
+- name: snowflake_remove_mysql_definer_clause
+  pattern: "(?is)\\bdefiner\\s*=\\s*`[^`]+`@`[^`]+`\\s+"
+  replacement: ""
+  flags: "is"
+  description: "Remove MySQL DEFINER clause because Snowflake does not support it."
+
+- name: snowflake_remove_mysql_sql_security_clause
+  pattern: "(?is)\\bsql\\s+security\\s+definer\\s+"
+  replacement: ""
+  flags: "is"
+  description: "Remove MySQL SQL SECURITY DEFINER clause for Snowflake."
+
+- name: snowflake_backtick_identifier_cleanup
+  pattern: "`([^`]+)`"
+  replacement: '"\\1"'
+  flags: "is"
+  description: "Convert MySQL backtick identifiers to Snowflake double-quoted identifiers."

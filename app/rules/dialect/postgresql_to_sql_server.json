@@ -1,0 +1,31 @@
+{
+  "target_rules": [
+    "Use SQL Server-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit PostgreSQL-only casts, dollar quoting, or language clauses."
+  ],
+  "unsupported_object_types": {
+    "cursor": "Standalone cursor objects are not supported as migratable objects for SQL Server in this tool.",
+    "event": "PostgreSQL event migration is not supported by this tool."
+  },
+  "object_rules": {
+    "table": [
+      "Convert PostgreSQL table syntax to valid SQL Server DDL with compatible data types and defaults."
+    ],
+    "view": [
+      "Convert PostgreSQL view syntax to valid SQL Server view syntax."
+    ],
+    "storedprocedure": [
+      "Convert PostgreSQL procedure syntax to valid SQL Server CREATE PROCEDURE syntax."
+    ],
+    "function": [
+      "Convert PostgreSQL function syntax to valid SQL Server CREATE FUNCTION syntax."
+    ],
+    "trigger": [
+      "Convert PostgreSQL trigger semantics to valid SQL Server trigger syntax."
+    ],
+    "sequence": [
+      "Convert PostgreSQL sequences to valid SQL Server CREATE SEQUENCE syntax when present."
+    ]
+  }
+}

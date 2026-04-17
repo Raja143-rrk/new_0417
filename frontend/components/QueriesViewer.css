@@ -1,0 +1,158 @@
+.queries-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.queries-viewer {
+  width: min(1180px, 100%);
+  max-height: min(82vh, 920px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d9e2ec;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+
+.queries-viewer-head,
+.queries-viewer-tabs,
+.queries-viewer-toolbar,
+.queries-object-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.queries-viewer-head {
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #d9e2ec;
+  background: linear-gradient(180deg, #fbfdff, #f5f9fd);
+}
+
+.queries-viewer-title {
+  font: 700 1.12rem "Segoe UI Semibold", "Segoe UI", sans-serif;
+  color: #152238;
+}
+
+.queries-viewer-subtitle {
+  color: #73839a;
+  font-size: 0.84rem;
+}
+
+.queries-viewer-tabs {
+  padding: 14px 22px 0;
+}
+
+.queries-tab {
+  border: 1px solid #d9e2ec;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #fff;
+  color: #425466;
+  cursor: pointer;
+  font: 600 0.9rem "Segoe UI", sans-serif;
+}
+
+.queries-tab.active {
+  border-color: #1f73c9;
+  background: #1f73c9;
+  color: #fff;
+}
+
+.queries-viewer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 18px 22px 22px;
+  background: #f8fbfd;
+}
+
+.queries-viewer-toolbar {
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.queries-empty,
+.queries-error,
+.queries-loading {
+  padding: 20px;
+  border: 1px dashed #c8d4e0;
+  border-radius: 16px;
+  background: #fff;
+  color: #73839a;
+}
+
+.queries-error {
+  color: #a63939;
+}
+
+.queries-code {
+  margin: 0;
+  padding: 18px;
+  border: 1px solid #d9e2ec;
+  border-radius: 18px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font: 0.84rem/1.65 "Consolas", "SFMono-Regular", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.queries-object-list {
+  display: grid;
+  gap: 14px;
+}
+
+.queries-object-card {
+  border: 1px solid #d9e2ec;
+  border-radius: 18px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.queries-object-head {
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 18px;
+  border: 0;
+  background: transparent;
+  color: #152238;
+  cursor: pointer;
+  text-align: left;
+}
+
+.queries-object-title {
+  font: 700 0.96rem "Segoe UI Semibold", "Segoe UI", sans-serif;
+}
+
+.queries-object-meta {
+  color: #73839a;
+  font-size: 0.79rem;
+}
+
+.queries-object-body {
+  padding: 0 18px 18px;
+}
+
+@media (max-width: 860px) {
+  .queries-viewer-backdrop {
+    padding: 12px;
+  }
+
+  .queries-viewer {
+    max-height: 92vh;
+  }
+
+  .queries-viewer-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

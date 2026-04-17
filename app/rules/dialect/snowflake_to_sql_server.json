@@ -1,0 +1,29 @@
+{
+  "target_rules": [
+    "Use SQL Server-compatible SQL only.",
+    "Preserve the source object name exactly unless the source SQL explicitly renames it.",
+    "Do not emit Snowflake-only clauses, warehouse settings, or session semantics."
+  ],
+  "unsupported_object_types": {
+    "trigger": "Snowflake trigger migration is not supported because Snowflake sources do not provide trigger objects in this tool.",
+    "event": "Snowflake event migration is not supported by this tool.",
+    "cursor": "Standalone cursor objects are not supported as migratable objects for SQL Server in this tool."
+  },
+  "object_rules": {
+    "table": [
+      "Convert Snowflake table syntax to valid SQL Server DDL with compatible data types and defaults."
+    ],
+    "storedprocedure": [
+      "Convert Snowflake procedure syntax to valid SQL Server CREATE PROCEDURE syntax."
+    ],
+    "function": [
+      "Convert Snowflake function syntax to valid SQL Server CREATE FUNCTION syntax."
+    ],
+    "sequence": [
+      "Convert Snowflake sequences to valid SQL Server CREATE SEQUENCE syntax when present."
+    ],
+    "synonym": [
+      "Convert Snowflake synonym-like indirection only when it can be represented as a valid SQL Server synonym."
+    ]
+  }
+}
