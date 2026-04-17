@@ -24,7 +24,7 @@ const AUTH_KEY = 'dbm_auth';
 const USER_KEY = 'dbm_user';
 const ROLE_KEY = 'dbm_role';
 const EMAIL_KEY = 'dbm_email';
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = '/api';
 
 export const ROLE_DEFINITIONS: Record<
   RoleKey,

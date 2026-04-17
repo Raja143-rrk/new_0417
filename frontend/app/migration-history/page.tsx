@@ -7,7 +7,7 @@ import QueriesViewer from '@/components/QueriesViewer';
 import { canAccessPage, getSession, hasPermission, logout } from '@/lib/rbac';
 import './migration-history.css';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = '/api';
 const ALL_OBJECT_TYPES = ['table', 'view', 'storedprocedure', 'function', 'trigger', 'cursor', 'event', 'sequence', 'synonym'];
 const PAGE_SIZE = 10;
 

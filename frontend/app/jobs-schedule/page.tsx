@@ -6,7 +6,7 @@ import PageHeader from '@/components/PageHeader';
 import { canAccessPage, getSession, hasPermission, logout } from '@/lib/rbac';
 import './jobs-schedule.css';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = '/api';
 
 interface TaskRecord {
   object_type: string;

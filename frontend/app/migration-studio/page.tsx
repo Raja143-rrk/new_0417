@@ -31,7 +31,7 @@ import { ThemePreference, getStoredThemePreference, setThemePreference } from '@
 import PageHeader from '@/components/PageHeader';
 import './migration-studio.css';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = '/api';
 
 interface StoredMigrationConfig {
   database_type?: string;

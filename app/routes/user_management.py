@@ -68,7 +68,7 @@ def create_user_account(payload: CreateUserRequest):
         raise HTTPException(status_code=400, detail=str(error)) from error
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
-    login_url = f"{os.getenv('FRONTEND_BASE_URL', 'http://localhost:3000').rstrip('/')}/login"
+    login_url = f"{os.getenv('FRONTEND_BASE_URL', 'http://localhost:3001').rstrip('/')}/login"
     email_sent, message = send_user_invite_email(
         recipient_email=created_user["email"],
         username=created_user["username"],

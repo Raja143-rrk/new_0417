@@ -181,7 +181,7 @@ export default function ConnectionsPage() {
 
     setTestingConnection(true);
     try {
-      const response = await fetch('http://localhost:8000/api/test-connection', {
+      const response = await fetch('/api/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -3,7 +3,7 @@
 import type { ConnectionProfile } from '@/lib/migrationStudio';
 import type { RoleKey } from '@/lib/rbac';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = '/api';
 
 interface ConnectionListResponse {
   items?: ConnectionProfile[];

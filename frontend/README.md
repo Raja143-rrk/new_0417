@@ -56,6 +56,14 @@ frontend/
 - npm or yarn
 - FastAPI backend running on `http://localhost:8000`
 
+## Change Note
+
+### 2026-04-17
+- Frontend API calls were changed from hardcoded `http://127.0.0.1:8000/api` and `http://localhost:8000/api` URLs to relative `/api` routes.
+- This avoids client laptops trying to call their own local backend when they open the app from another machine.
+- The frontend now uses the Next.js rewrite in `next.config.js` to forward `/api/:path*` to the backend running on the host machine at `http://localhost:8000/api/:path*`.
+- This change is safer than hardcoding a LAN IP address, because it continues to work even if the host IP changes.
+
 ### Installation
 
 1. Navigate to the frontend directory:
@@ -73,20 +81,20 @@ npm install
 # Update .env.local if needed (default is http://localhost:8000)
 ```
 
-4. Start the development server:
+4. Start the development server on port `3001`:
 ```bash
-npm run dev
+npx next dev -H 0.0.0.0 -p 3001
 ```
 
 5. Open your browser:
 ```
-http://localhost:3000
+http://localhost:3001
 ```
 
 ## Available Scripts
 
 ```bash
-npm run dev      # Start development server (http://localhost:3000)
+npx next dev -H 0.0.0.0 -p 3001   # Start development server (http://localhost:3001)
 npm run build    # Build for production
 npm start        # Start production server
 npm run lint     # Run ESLint
@@ -104,7 +112,7 @@ Click on any credential badge to auto-fill the login form.
 ## Backend Integration
 
 ### API Configuration
-The frontend is configured to proxy API requests to the FastAPI backend:
+The frontend is configured to proxy API requests to the FastAPI backend. Frontend source files should call `/api/...`, not `localhost` or a hardcoded IP:
 
 ```javascript
 // next.config.js
@@ -231,14 +239,15 @@ Theme preference is stored in `localStorage` as `dbm_theme`.
 
 ### Port 3000 already in use
 ```bash
-# Specify different port
-npm run dev -- -p 3001
+# Run the frontend on port 3001
+npx next dev -H 0.0.0.0 -p 3001
 ```
 
 ### API connection refused
 - Ensure FastAPI backend is running on `http://localhost:8000`
-- Check `.env.local` configuration
-- Browser console for CORS errors
+- Ensure the frontend was restarted after the `/api` proxy changes
+- If other laptops are connecting, open the frontend using the host machine IP, for example `http://192.168.5.139:3001`
+- Browser console for network errors
 
 ### Styling not loading
 ```bash
